@@ -8,5 +8,13 @@
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
     "files.autoSave": "afterDelay",
-    "files.autoSaveWhenNoErrors": true
+    "files.autoSaveWhenNoErrors": true,
+    "files.eol": "\n",
+    "cSpell.words": [
+        "BLETIS",
+        "Bluefruit",
+        "heartrate",
+        "Periph",
+        "Preeclampsia"
+    ]
 }

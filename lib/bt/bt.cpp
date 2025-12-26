@@ -1,17 +1,17 @@
 #include "bt.hpp"
 
+#include "bletis.hpp"
 #include <Adafruit_LittleFS.h>
 #include <InternalFileSystem.h>
 
 // BLE Service
-BLEDfu bledfu;   // OTA DFU service
-BLEDis bledis;   // device information
-BLEUart bleuart; // uart over ble
-BLEBas blebas;   // battery
+BLEDfu bledfu;    // OTA DFU service
+BLEDis bledis;    // device information
+// BLEUart bleuart; // uart over ble
+BLEBas blebas;    // battery
+BLETis bletis; // time information
 
 void PES_BLE::init() {
-    Serial.println("Bluefruit52 BLEUART Example");
-    Serial.println("---------------------------\n");
 
     // Setup the BLE LED to be enabled on CONNECT
     // Note: This is actually the default behavior, but provided
@@ -24,49 +24,32 @@ void PES_BLE::init() {
     Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
 
     Bluefruit.begin();
+    Bluefruit.setName("PES-0000"); // TODO: update to be last 4 dig of dev num
     Bluefruit.setTxPower(4); // Check bluefruit.h for supported values
     // Bluefruit.setName(getMcuUniqueID()); // useful testing with multiple
     // central connections
     Bluefruit.Periph.setConnectCallback(connect_callback);
     Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
 
-    // To be consistent OTA DFU should be added first if it exists
+    // // To be consistent OTA DFU should be added first if it exists
     bledfu.begin();
 
-    // Configure and Start Device Information Service
+    // // Configure and Start Device Information Service
     bledis.setManufacturer("S26-09");
     bledis.setModel("Preeclampsia Screener");
-    // bledis.setFirmwareRev(FIRMWARE_REVISION);
-    // bledis.setHardwareRev(HARDWARE_REVISION);
+    bledis.setSoftwareRev(SOFTWARE_REVISION);
+    bledis.setHardwareRev(HARDWARE_REVISION);
     bledis.begin();
 
-    // Configure and Start BLE Uart Service
-    bleuart.begin();
+    // // Start BLE Battery Service
+    // blebas.begin();
+    // blebas.write(255);
 
-    // Start BLE Battery Service
-    blebas.begin();
-    blebas.write(255);
+    // Start Time Service
+    bletis.begin();
 
     // Set up and start advertising
     startAdv();
-
-    Serial.println(
-        "Please use Adafruit's Bluefruit LE app to connect in UART mode");
-    Serial.println("Once connected, enter character(s) that you wish to send");
-}
-
-bool PES_BLE::write(String str) {
-    if (0 < bleuart.write(str.c_str()))
-        return true;
-    else
-        return false;
-}
-
-bool PES_BLE::available() {
-    if (0 < bleuart.available())
-        return true;
-    else
-        return false;
 }
 
 void PES_BLE::disconnect() {
@@ -84,9 +67,6 @@ void startAdv(void) {
     // Advertising packet
     Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
     Bluefruit.Advertising.addTxPower();
-
-    // Include bleuart 128-bit uuid
-    Bluefruit.Advertising.addService(bleuart);
 
     // Secondary Scan Response packet (optional)
     // Since there is no room for 'Name' in Advertising packet
@@ -107,6 +87,8 @@ void startAdv(void) {
     Bluefruit.Advertising.setFastTimeout(30); // number of seconds in fast mode
     Bluefruit.Advertising.start(
         0); // 0 = Don't stop advertising after n seconds
+
+    Serial.println("STATUS: advertising...");
 }
 
 // callback invoked when central connects
