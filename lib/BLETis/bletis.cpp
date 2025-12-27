@@ -7,14 +7,17 @@ err_t BLETis::begin() {
     VERIFY_STATUS(BLEService::begin());
 
     _time.setUuid(UUID_CHR_TIME);
-    _time.setProperties(CHR_PROPS_WRITE); // removed | CHR_PROPS_WRITE_WO_RESP
+    _time.setProperties(CHR_PROPS_WRITE |
+                        CHR_PROPS_READ); // removed | CHR_PROPS_WRITE_WO_RESP
     _time.setWriteCallback(BLETis::bletis_time_cb, true);
 
     _time.setPermission(
         SECMODE_OPEN, // TODO: change first arg to SECMODE_NO_ACCESS
         SECMODE_OPEN);
     _time.setFixedLen(4);
-    _time.setUserDescriptor("TIME");
+    _time.setUserDescriptor("TIME"); // TODO: Remove
+
+    VERIFY_STATUS(_time.begin());
 
     _tz.setUuid(UUID_CHR_TIMEZONE);
     _tz.setProperties(CHR_PROPS_WRITE | CHR_PROPS_READ);
@@ -22,9 +25,8 @@ err_t BLETis::begin() {
 
     _tz.setPermission(SECMODE_OPEN, SECMODE_OPEN); // can read and write
     _tz.setFixedLen(1);
-    _tz.setUserDescriptor("TZ");
+    _tz.setUserDescriptor("TZ"); // TODO: Remove
 
-    VERIFY_STATUS(_time.begin());
     VERIFY_STATUS(_tz.begin());
 
     _tz.write8(0); // TODO: replace with saved timezone
@@ -43,8 +45,7 @@ void BLETis::bletis_time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     }
     memcpy(&time, data, len);
 
-    Serial.print("DEBUG: Unix Time Received >");
-    Serial.println(time);
+    Serial.printf("STATUS: Unix Time Received > \"%x\"\n", time);
 }
 
 void BLETis::bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
@@ -58,6 +59,5 @@ void BLETis::bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     BLETis &svc = (BLETis &)chr->parentService();
     svc._tz.write8(tz + 1); // TODO: remove
 
-    Serial.print("STATUS: Timezone Received >");
-    Serial.println(tz);
+    Serial.printf("STATUS: Timezone Received > \"%d\"\n", tz);
 }

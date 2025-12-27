@@ -16,5 +16,6 @@
         "heartrate",
         "Periph",
         "Preeclampsia"
-    ]
+    ],
+    "C_Cpp.doxygen.generatedStyle": "/**"
 }

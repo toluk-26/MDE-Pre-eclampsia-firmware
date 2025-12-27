@@ -17,8 +17,15 @@ class BLETis : public BLEService {
     BLECharacteristic _time;
     BLECharacteristic _tz;
 
+    /**
+     * @brief time callback function
+     */
     static void bletis_time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                uint8_t *data, uint16_t len);
+
+    /**
+     * @brief timezone callback function
+     */
     static void bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                            uint8_t *data, uint16_t len);
 };
