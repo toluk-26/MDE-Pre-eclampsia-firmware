@@ -1,4 +1,10 @@
+
+#include "bt.hpp"
+#include <Adafruit_TinyUSB.h>
 #include <Arduino.h>
+#include <bluefruit.h>
+
+PESBt bt;
 
 void setup() {
     Serial.begin(115200);
@@ -11,6 +17,8 @@ void setup() {
     Serial.printf("PreEclampsia Screener v%s\n", SOFTWARE_REVISION);
     Serial.println("-----------------------------\n");
 #endif
+
+    bt.init();
 }
 
 void loop() {}
