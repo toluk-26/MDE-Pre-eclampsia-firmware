@@ -9,6 +9,7 @@ void setup() {
 #ifdef DEBUG
     Serial.println("-----------------------------");
     Serial.printf("PreEclampsia Screener v%s\n", SOFTWARE_REVISION);
+    Serial.println("        Main Program");
     Serial.println("-----------------------------\n");
 #endif
 }

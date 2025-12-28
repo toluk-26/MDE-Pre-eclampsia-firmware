@@ -11,11 +11,13 @@
     "files.autoSaveWhenNoErrors": true,
     "files.eol": "\n",
     "cSpell.words": [
+        "Adafruit",
         "BLETIS",
         "Bluefruit",
         "heartrate",
         "Periph",
-        "Preeclampsia"
+        "Preeclampsia",
+        "QSPI"
     ],
     "C_Cpp.doxygen.generatedStyle": "/**"
 }

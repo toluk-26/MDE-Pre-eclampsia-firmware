@@ -1,14 +1,10 @@
-
-#include "bt.hpp"
-#include <Adafruit_TinyUSB.h>
 #include <Arduino.h>
-#include <bluefruit.h>
 
-#ifndef DEBUG
+#include "flashlog.hpp"
+
+#if !(DEBUG || DEBUG_FLASH)
 #error "you seem to be in the wrong env"
 #endif
-
-PESBt bt;
 
 void setup() {
     Serial.begin(115200);
@@ -18,10 +14,25 @@ void setup() {
 
     Serial.println("-----------------------------");
     Serial.printf("PreEclampsia Screener v%s\n", SOFTWARE_REVISION);
-    Serial.println("        BLE Program");
+    Serial.println("        Flash Program");
     Serial.println("-----------------------------\n");
 
-    bt.init();
+    mem.cleanAll();
+    LOG_SENSOR(91, 90, 120, 0);
+    LOG_SENSOR(92, 92, 123, 0);
+    LOG_SENSOR(93, 90, 120, 0);
+    LOG_SENSOR(94, 92, 123, 0);
+
+    mem.printInfo();
+    mem.printConfig();
+    mem._findTail();
+    mem.printMeta();
+    mem.printData();
+
+    mem.dumpConfig();
+    mem.dumpData();
+
+
 }
 
 void loop() {}
