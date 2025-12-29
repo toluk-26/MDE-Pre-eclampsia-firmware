@@ -17,6 +17,7 @@
         "heartrate",
         "Periph",
         "Preeclampsia",
+        "qflash",
         "QSPI"
     ],
     "C_Cpp.doxygen.generatedStyle": "/**"

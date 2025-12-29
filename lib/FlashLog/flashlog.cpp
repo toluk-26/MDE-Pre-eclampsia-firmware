@@ -1,13 +1,19 @@
+/**
+ * @file flashlog.cpp
+ * @author Tolu Kolade
+ * @date December 27, 2025
+ * @todo missing function implementations
+ * @todo split header guarded blocks into separate .cpp files
+ */
+
 #include "flashlog.hpp"
 
-FlashLog mem;
-
 FlashLog::FlashLog()
-    : SPI_2(NRF_SPIM0, PIN_QSPI_IO1, PIN_QSPI_SCK, PIN_QSPI_IO0),
-      QFlashTransport(PIN_QSPI_CS, SPI_2), QFlash(&QFlashTransport) {
+    : _SPI_2(NRF_SPIM0, PIN_QSPI_IO1, PIN_QSPI_SCK, PIN_QSPI_IO0),
+      _QFlashTransport(PIN_QSPI_CS, _SPI_2), _qFlash(&_QFlashTransport) {
 
     // init memory
-    if (!QFlash.begin(&p25q16h, 1)) {
+    if (!_qFlash.begin(&p25q16h, 1)) {
 #ifdef DEBUG
         Serial.println("ERROR: failed to initialize QSPI flash chip");
 #endif
@@ -19,7 +25,7 @@ FlashLog::FlashLog()
 #endif
 
     _flashOk = true;
-    _flashSize = QFlash.size();
+    _flashSize = _qFlash.size();
 
     // test memory
     // check metadata or create
@@ -47,15 +53,15 @@ bool FlashLog::append(uint8_t type, const std::vector<uint8_t> &payload) {
 #endif
         return false;
     }
-    while (QFlash.isBusy() && millis() < 100) {
+    while (_qFlash.isBusy() && millis() < 100) {
         ;
     }
-//     if (QFlash.isBusy()) {
-// #ifdef DEBUG
-//         Serial.println("ERROR: tried to append. flash timed out");
-// #endif
-//         return false;
-//     }
+    //     if (QFlash.isBusy()) {
+    // #ifdef DEBUG
+    //         Serial.println("ERROR: tried to append. flash timed out");
+    // #endif
+    //         return false;
+    //     }
 
     // ok. can continue
 
@@ -64,19 +70,19 @@ bool FlashLog::append(uint8_t type, const std::vector<uint8_t> &payload) {
 #ifdef DEBUG
     Serial.printf("STATUS: writing to address 0x%06x\n", _logTailAddr);
 #endif
-    QFlash.writeBuffer(_logTailAddr, (uint8_t *)&h, sizeof(h)); // write header
+    _qFlash.writeBuffer(_logTailAddr, (uint8_t *)&h, sizeof(h)); // write header
     uint32_t payloadAddr = _logTailAddr + sizeof(h);
 #ifdef DEBUG
-    Serial.printf("STATUS: writing to address 0x%06lX", payloadAddr);
+    Serial.printf("STATUS: writing to address 0x%06lX\n", payloadAddr);
 #endif
-    QFlash.writeBuffer(payloadAddr, (uint8_t *)payload.data(),
-                       payload.size()); // write payload
+    _qFlash.writeBuffer(payloadAddr, (uint8_t *)payload.data(),
+                        payload.size()); // write payload
 
     // update tailAddr
     this->_logTailAddr = payloadAddr + payload.size();
 
 #ifdef DEBUG
-    Serial.printf("Status: new tail addr >%x\n", this->_logTailAddr);
+    Serial.printf("Status: new tail addr > %06x\n", this->_logTailAddr);
 #endif
     return true;
 }
@@ -86,7 +92,7 @@ bool FlashLog::_findTail() {
 
     while (addr + sizeof(DataHdr) <= _flashSize) {
         DataHdr h;
-        QFlash.readBuffer(addr, (uint8_t *)&h, sizeof(h));
+        _qFlash.readBuffer(addr, (uint8_t *)&h, sizeof(h));
 
         // check if header is empty
         const uint8_t *p = (const uint8_t *)&h;
@@ -111,12 +117,51 @@ bool FlashLog::_findTail() {
     return false;
 }
 
+void FlashLog::cleanConfig() {
+    _qFlash.eraseSector(0);
+#ifdef DEBUG
+    Serial.print("STATUS: waiting to erase config. ");
+#endif
+    _qFlash.waitUntilReady();
+#ifdef DEBUG
+    Serial.println("Completed");
+#endif
+}
+
+void FlashLog::cleanLogs() {
+    const uint logSize = _logTailAddr - LOG_OFFSET;
+    const uint numOfLogSectors = logSize / SECTOR_SIZE + 16;
+    if (numOfLogSectors < 32){
+#ifdef DEBUG
+        Serial.printf("STATUS: erasing small log of %u sectors\n", numOfLogSectors - 16);
+#endif
+        for (uint i = 16; i <= numOfLogSectors; i++)
+            _qFlash.erasePage(i);}
+    else {
+#ifdef DEBUG
+        Serial.println("STATUS: erasing large log");
+#endif
+        for (uint i = 16; i < 32; i++)
+            _qFlash.erasePage(i);
+        for (uint i = 1; i < 32; i++)
+            _qFlash.eraseBlock(i);
+    }
+
+#ifdef DEBUG
+    Serial.print("STATUS: waiting to erase config. ");
+#endif
+    _qFlash.waitUntilReady();
+#ifdef DEBUG
+    Serial.println("Completed");
+#endif
+}
+
 void FlashLog::cleanAll() {
-    QFlash.eraseChip();
+    _qFlash.eraseChip();
 #ifdef DEBUG
     Serial.print("STATUS: waiting to erase chip. ");
 #endif
-    QFlash.waitUntilReady();
+    _qFlash.waitUntilReady();
 #ifdef DEBUG
     Serial.println("Completed");
 #endif
@@ -125,12 +170,12 @@ void FlashLog::cleanAll() {
 #ifdef DEBUG
 void FlashLog::printInfo() {
     Serial.println("---Flash Device Stats--");
-    Serial.printf("JEDEC: \t0x%X\n", QFlash.getJEDECID());
-    Serial.printf("Flash size: \t%d (KB)\n", (_flashSize / 1024));
-    Serial.printf("Page size: \t%d\n", QFlash.pageSize());
-    Serial.printf("Num pages: \t%d\n", QFlash.numPages());
-    Serial.printf("Sector count: \t%d\n", QFlash.sectorCount());
-    Serial.printf("Log Size: \t%d\n", _logTailAddr - LOG_OFFSET);
+    Serial.printf("JEDEC: \t\t0x%X\n", _qFlash.getJEDECID());
+    Serial.printf("Flash size: \t%u (KB)\n", (_flashSize / 1024));
+    Serial.printf("Page size: \t%u (B)\n", _qFlash.pageSize());
+    Serial.printf("Num pages: \t%u\n", _qFlash.numPages());
+    Serial.printf("Sector count: \t%u\n", _qFlash.sectorCount());
+    Serial.printf("Log Size: \t%u (b)\n", _logTailAddr - LOG_OFFSET);
 }
 
 void FlashLog::printMeta() {
@@ -140,7 +185,7 @@ void FlashLog::printMeta() {
 
 void FlashLog::printConfig() {
     ConfigLoad c;
-    QFlash.readBuffer(CFG_OFFSET, (uint8_t *)&c, sizeof(c));
+    _qFlash.readBuffer(CFG_OFFSET, (uint8_t *)&c, sizeof(c));
 
     Serial.println("---Config Data--");
     Serial.printf("PID:\t%u\n", c.pid);
@@ -157,8 +202,9 @@ void FlashLog::printData() {}
 #ifdef DEBUG_FLASH
 
 void FlashLog::dumpConfig() {
+    _qFlash.waitUntilReady();
     Serial.println("---Dump Config Data--");
-    this->dump(CFG_OFFSET, 128);
+    this->dump(CFG_OFFSET, PAGE_SIZE); // config is one page
 }
 
 void FlashLog::dumpData() {
@@ -166,19 +212,18 @@ void FlashLog::dumpData() {
     this->dump(LOG_OFFSET, _logTailAddr - LOG_OFFSET);
 }
 
-void FlashLog::dump() {}
-
 void FlashLog::dump(uint32_t start, uint32_t length) {
     const size_t bytesPerLine = 16;
     const uint32_t lines = ((length / 16) + 1) * 16;
     const uint32_t end = start + lines;
+
     uint8_t buf[bytesPerLine]; // safe for <=32 bytesPerLine
 
     for (uint32_t addr = start; addr < end; addr += bytesPerLine) {
         uint32_t n = bytesPerLine;
         if (addr + n > end) n = end - addr;
 
-        QFlash.readBuffer(addr, buf, n);
+        _qFlash.readBuffer(addr, buf, n);
 
         // Address
         Serial.printf("%06lX  ", (unsigned long)addr);
@@ -201,3 +246,5 @@ void FlashLog::dump(uint32_t start, uint32_t length) {
     }
 }
 #endif
+
+FlashLog mem;

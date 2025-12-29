@@ -1,3 +1,10 @@
+/**
+ * @file flashlog.hpp
+ * @brief class definition to manipulate the external flash memory
+ * @author Tolu Kolade
+ * @date December 27, 2025
+ */
+
 #pragma once
 
 #include <Adafruit_SPIFlash.h>
@@ -6,6 +13,7 @@
 #include <cstdint>
 #include <vector>
 
+// QSPI flash device information. from online
 SPIFlash_Device_t const p25q16h{
     .total_size = (1UL << 21), // 2MiB
     .start_up_time_us = 10000,
@@ -23,10 +31,6 @@ SPIFlash_Device_t const p25q16h{
     .is_fram = 0,
 };
 
-bool LOG_DEBUG(const uint8_t code);
-bool LOG_SENSOR(const uint8_t heartrate, const uint8_t diastolic,
-                const uint8_t systolic, const uint8_t code);
-
 class FlashLog {
   public:
     /**
@@ -34,6 +38,12 @@ class FlashLog {
      * template
      */
     FlashLog();
+
+    /**
+     * @brief finds where the data ends and sets the tail addr var to it. runs
+     * once at start.
+     * @return found tail addr or nah
+     */
     bool _findTail(); // TODO: move to private
 
     /**
@@ -61,15 +71,16 @@ class FlashLog {
 #ifdef DEBUG_FLASH
     void dumpConfig();
     void dumpData();
-    void dump();
+    void dump() { dump(0, _flashSize); };
     void dump(uint32_t start, uint32_t length);
 #endif
 
   protected:
-    const uint32_t BLOCK_SIZE = 0x001000; // 4KB sector
-
-    const uint32_t CFG_OFFSET = 0x000000; // config data block
-    const uint32_t LOG_OFFSET = 0x001000; // log block
+    const uint32_t PAGE_SIZE = 0x000100;   // 256 bytes
+    const uint32_t SECTOR_SIZE = 0x001000; // 4 KB
+    const uint32_t BLOCK_SIZE = 0x010000;  // 64 KB
+    const uint32_t CFG_OFFSET = 0x000000;  // config data block
+    const uint32_t LOG_OFFSET = 0x001000;  // log block
 
 #pragma pack(push, 2)
     struct DataHdr {
@@ -80,14 +91,15 @@ class FlashLog {
 #pragma pack(pop)
 
     struct ConfigLoad {
+
         uint32_t pid; // patient id TODO: confirm if size is okay
         uint32_t thres_dia;
         uint32_t thres_sys;
     };
 
-    SPIClass SPI_2;
-    Adafruit_FlashTransport_SPI QFlashTransport;
-    Adafruit_SPIFlash QFlash;
+    SPIClass _SPI_2;
+    Adafruit_FlashTransport_SPI _QFlashTransport;
+    Adafruit_SPIFlash _qFlash;
 
   private:
     bool _flashOk = false;              // is the QSPI okay?

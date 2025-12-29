@@ -1,5 +1,13 @@
+/**
+ * @file TEST_flash.cpp
+ * @brief test flash functionality. be sure to use env:test_flash
+ * @author Tolu Kolade
+ * @date December 27, 2025
+ */
+
 #include <Arduino.h>
 
+#include "append.hpp"
 #include "flashlog.hpp"
 
 #if !(DEBUG || DEBUG_FLASH)
@@ -11,17 +19,30 @@ void setup() {
     while (!Serial && millis() < SERIAL_WAIT_TIME) {
         // wait for serial to connect, for up to 10 seconds (10000 milliseconds)
     }
+    delay(500);
 
     Serial.println("-----------------------------");
     Serial.printf("PreEclampsia Screener v%s\n", SOFTWARE_REVISION);
     Serial.println("        Flash Program");
     Serial.println("-----------------------------\n");
 
-    mem.cleanAll();
-    LOG_SENSOR(91, 90, 120, 0);
-    LOG_SENSOR(92, 92, 123, 0);
-    LOG_SENSOR(93, 90, 120, 0);
-    LOG_SENSOR(94, 92, 123, 0);
+    mem.cleanLogs();
+    // LOG_SENSOR(91, 90, 120, 0);
+    // LOG_SENSOR(92, 92, 123, 0);
+    // LOG_SENSOR(93, 90, 120, 0);
+    // LOG_SENSOR(94, 92, 123, 0);
+    // LOG_SENSOR(91, 90, 120, 0);
+    // LOG_SENSOR(92, 92, 123, 0);
+    // LOG_SENSOR(93, 90, 120, 0);
+    // LOG_SENSOR(94, 92, 123, 0);
+    // LOG_SENSOR(91, 90, 120, 0);
+    // LOG_SENSOR(92, 92, 123, 0);
+    // LOG_SENSOR(93, 90, 120, 0);
+    // LOG_SENSOR(94, 92, 123, 0);
+    // LOG_SENSOR(91, 90, 120, 0);
+    // LOG_SENSOR(92, 92, 123, 0);
+    // LOG_SENSOR(93, 90, 120, 0);
+    // LOG_SENSOR(94, 92, 123, 0);
 
     mem.printInfo();
     mem.printConfig();
@@ -31,8 +52,6 @@ void setup() {
 
     mem.dumpConfig();
     mem.dumpData();
-
-
 }
 
 void loop() {}

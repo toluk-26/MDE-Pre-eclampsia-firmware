@@ -1,3 +1,11 @@
+/**
+ * @file append.cpp
+ * @brief wrappers to add data to the external flash memory
+ * @author Tolu Kolade
+ * @date December 28, 2025
+ */
+
+#include "append.hpp"
 #include "flashlog.hpp"
 
 bool LOG_DEBUG(const uint8_t code) {
