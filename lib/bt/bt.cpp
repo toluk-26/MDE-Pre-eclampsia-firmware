@@ -1,5 +1,10 @@
-#include "bt.hpp"
+/**
+ * @file bt.cpp
+ * @author Tolu Kolade
+ * @brief ble device functions and starts services
+ */
 
+#include "bt.hpp"
 #include "bletis.hpp"
 
 // BLE Services
@@ -112,7 +117,8 @@ void PESBt::ble_config() {
 void PESBt::dev_info_config() {
     // Configure and Start Device Information Service
     bledis.setManufacturer("S26-09");
-    bledis.setModel("Preeclampsia Screener"); // TODO: change to something more meaningful? numeral?
+    bledis.setModel("Preeclampsia Screener"); // TODO: change to something more
+                                              // meaningful? numeral?
     bledis.setSoftwareRev(SOFTWARE_REVISION);
     bledis.setHardwareRev(HARDWARE_REVISION);
     bledis.begin();

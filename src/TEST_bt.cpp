@@ -1,3 +1,9 @@
+/**
+ * @file TEST_bt.cpp
+ * @brief test bluetooth functionality. be sure to use env:test_bt
+ * @author Tolu Kolade
+ * @date December 23, 2025
+ */
 
 #include "bt.hpp"
 #include <Adafruit_TinyUSB.h>

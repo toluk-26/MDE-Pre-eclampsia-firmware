@@ -1,3 +1,10 @@
+/**
+ * @file bletis.cpp
+ * @author Tolu Kolade
+ * @brief Time Update Service
+ * @date December 23, 2025
+ */
+
 #include "bletis.hpp"
 
 BLETis::BLETis() : BLEService(UUID_TIME_SERVICE) {}
@@ -40,24 +47,35 @@ void BLETis::bletis_time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     // need to access a var inside the class
     uint32_t time;
     if (len != sizeof(time)) {
+#ifdef DEBUG
         Serial.println("ERROR: time received size is wrong");
+#endif
         return;
     }
     memcpy(&time, data, len);
+    // TODO: save the time to the rtc
 
+#ifdef DEBUG
     Serial.printf("STATUS: Unix Time Received > \"%x\"\n", time);
+#endif
 }
 
 void BLETis::bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                           uint8_t *data, uint16_t len) {
     int8_t tz;
     if (len != sizeof(tz)) {
+#ifdef DEBUG
         Serial.println("ERROR: time received size is wrong");
+#endif
         return;
     }
     memcpy(&tz, data, len);
+    // TODO: save the tz to something
+
     BLETis &svc = (BLETis &)chr->parentService();
     svc._tz.write8(tz + 1); // TODO: remove
 
+#ifdef DEBUG
     Serial.printf("STATUS: Timezone Received > \"%d\"\n", tz);
+#endif
 }
