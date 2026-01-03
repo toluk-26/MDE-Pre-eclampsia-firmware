@@ -10,7 +10,7 @@
 #include "append.hpp"
 #include "flashlog.hpp"
 
-#if !(DEBUG || DEBUG_FLASH)
+#if !(DEBUG && DEBUG_FLASH)
 #error "you seem to be in the wrong env"
 #endif
 
