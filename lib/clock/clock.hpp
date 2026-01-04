@@ -4,17 +4,21 @@
  * rtc is a counter and not timer, we must be careful.
  * @author Tolu Kolade
  * @date January 3, 2025
- * 
+ *
  * @todo change setAlarm() param to uint or human time
  */
 
 #pragma once
 #include <cstdint>
 
+#define PRESCALER_C 0 // Max value is 4095
+
 /// @brief functions to manipulate time and interrupts
 class Time {
   public:
     Time();
+
+    bool tick();
 
     /**
      * @brief get the unix time from the rtc
@@ -28,7 +32,7 @@ class Time {
      * @param time unix time
      * @return successfully set time
      */
-    bool setTime(uint64_t time);
+    void setTime(uint64_t time);
 
     /**
      * @brief set interrupt for time
@@ -45,5 +49,30 @@ class Time {
     bool snooze();
 
   private:
-    uint64_t _time;
+    /// @brief holds last unix time. to get actual time, use function to update
+    /// from rtc
+    /// @note default value is Jan 1, 2026 00:00:00 UTC
+    uint64_t _time = 1767243600;
+
+    /// @brief timezone
+    uint8_t _tz;
+
+    bool a, s;
+
+    /**
+     * @brief converts the rtc precision stuff to seconds
+     * @param value counter value
+     * @return successfully set time
+     */
+    uint64_t convertCounter(uint32_t counter);
 };
+
+extern Time clock;
+
+#ifdef DEBUG
+/**
+ * @brief print a uint64_t. for debugging only. no endline
+ * @param v value to print
+ */
+void print64(uint64_t v);
+#endif

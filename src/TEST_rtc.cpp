@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
 #include "clock.hpp"
+#include <inttypes.h>
+#include <nrf_rtc.h>
 
 void setup() {
     Serial.begin(115200);
@@ -13,6 +15,11 @@ void setup() {
     Serial.printf("PreEclampsia Screener v%s\n", SOFTWARE_REVISION);
     Serial.println("        RTC Program");
     Serial.println("-----------------------------\n");
+    // print64(1767243600);
+    // Serial.print('\n');
+    clock.setAlarm(clock.getTime() + 60);
 }
 
-void loop() {}
+void loop() {
+    if (!clock.tick()) return;
+}
