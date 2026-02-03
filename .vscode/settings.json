@@ -9,7 +9,6 @@
     "editor.formatOnPaste": true,
     "files.autoSave": "afterDelay",
     "files.autoSaveWhenNoErrors": true,
-    "files.eol": "\n",
     "cSpell.words": [
         "Adafruit",
         "BLETIS",

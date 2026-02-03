@@ -6,6 +6,7 @@
  * @date January 3, 2025
  *
  * @todo implement check for out of bound count and update the time.
+ * @todo check if snooze works
  */
 
 #include "clock.hpp"
@@ -79,9 +80,9 @@ bool Time::tick() {
     o = overflowFlag;
     alarmFlag = snoozeFlag = overflowFlag = false;
 
-    // if overflow update time
-    if (o)
-        setTime(_time + convertCounter(0x1000000)); // convert to static value
+    // update time in overflow
+    /// @note does what setTime without clearing counter
+    if (o) _time += convertCounter(0x1000000); // convert to static value
 
 #ifdef DEBUG
     if (a) Serial.println("STATUS: alarm trigger");
@@ -99,6 +100,7 @@ uint64_t Time::getTime() {
 
 void Time::setTime(uint64_t time) {
     _time = time;
+    nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_CLEAR);
 #ifdef DEBUG
     Serial.print("STATUS: base time updated to ");
     print64(time);
