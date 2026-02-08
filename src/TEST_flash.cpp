@@ -44,6 +44,8 @@ void setup() {
     // LOG_SENSOR(93, 90, 120, 0);
     // LOG_SENSOR(94, 92, 123, 0);
 
+    // delay(500);
+
     mem.printInfo();
     mem.printConfig();
     mem._findTail();

@@ -11,7 +11,7 @@
 #pragma once
 #include <cstdint>
 
-#define PRESCALER_C 0 // Max value is 4095
+#define PRESCALER_C 4095 // Max value is 4095
 
 /// @brief functions to manipulate time and interrupts
 class Time {

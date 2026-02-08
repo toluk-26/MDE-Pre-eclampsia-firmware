@@ -1,3 +1,13 @@
+# notes
+https://forum.seeedstudio.com/t/seeed-xiao-ble-sense-nrf52840-deep-sleep-mode/275009
+https://forum.seeedstudio.com/t/sleep-current-of-xiao-nrf52840-deep-sleep-vs-light-sleep/271841
+https://forum.seeedstudio.com/t/system-on-sleep-of-xiao-ble/270472
+
+# Create a service
+add `#include <BLEUuid.h>` and look for the UUID
+
+[UUID Generator](https://www.uuidgenerator.net/)
+
 # Device Information
 | Characteristic Name | Description | UUID |
 | ------------------- | ----------- | ---- |
