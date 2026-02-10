@@ -16,10 +16,14 @@ you should be using `env:debug` for the most part. If you output to Serial, put 
 ```
 im not sure if its actually better to do that. ig it will make the program be faster and smaller
 
-## Code
-### entrypoint
+# Code
+## entrypoint
 - the entrypoint is [src/main.cpp](/src/main.cpp) or whatever test.
 - we should keep our code cool and abstract. Keep data structures in the [/lib](/lib/) folder. Avoid using `/include` and the implementation in `/src`
+## contributions
+you **MUST** create a branch to work on something. ive blocked pushes to main, but you can create a pull request or merge. this behavior is untested ngl
+
+you **SHOULD** be putting most of your code in /lib. it helps to make /src clear for entrypoints. 
 
 # Actions
 the task can be easily accessed from the status bar at the bottom of the VSCode window. you can hover over it to see what it does.
@@ -42,3 +46,24 @@ to add github libraries, append to `lib_deps =` in [platformio.ini](/platformio.
 
 # Testing
 sorry yall, testing is a pain here. in [platform.ini](/platformio.ini) i have some TEST environments. you can follow the pattern. you can copy one of the [env:TEST_*]. you need to copy the `extends=env:debug` and follow the pattern with `build_src_filters`. you must modify the last `+<TEST_file.cpp>` with whatever you are working on. you can  make the .cpp file in src/ and it will be the entrypoint for that environment
+
+# git review
+to keep it simple, use vscode's source control tab
+
+## create branch
+1. go to the source control tab and select the more options
+
+<img src="attachments/source control tab.png" alt="image of source control tab" height="200px">
+
+1. select the more options button
+
+<img src="attachments/scm options.png" alt="image of source control tab" height="150px">
+
+3. select branch > create branch and follow the instructions
+4. you probably need to publish the branch, but you can wait until you're ready for the next commit
+
+## merge into main/create pr 
+go to branch > merge... and select the current branch you are in and then main. if there are merge conflicts lmk or figure it out i believe in you.
+
+## update from main
+go to branch > merge... and select main and then the current branch you are in. its the reverse of the previous
