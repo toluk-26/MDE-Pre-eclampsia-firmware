@@ -1,9 +1,8 @@
-#include "fsm.h"
-#include "indicators.h"
-#include "power.h"
-#include "sensors.h"
+// #include "fsm.h"
+// #include "indicators.h"
+// #include "power.h"
+// #include "sensors.h"
 #include <Arduino.h>
-#include <Wire.h>
 
 void setup() {
     Serial.begin(115200);
@@ -17,5 +16,6 @@ void setup() {
     Serial.println("        Main Program");
     Serial.println("-----------------------------\n");
 #endif
+}
 
-    void loop() {}
+void loop() {}
