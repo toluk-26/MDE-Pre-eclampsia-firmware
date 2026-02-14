@@ -17,16 +17,17 @@ actigraph::actigraph(int windowLength, int windowCount, float movementThreshold,
       maxHeadAngle(maxHeadAngle), movementThreshold(movementThreshold) {}
 
 bool actigraph::run() {
-    data.clear();
-    xl.start();
+    data.clear(); // clear accelerometer data
+    xl.start();   // turn on accelerometer
 
     // builds windows
-    for (int window = 0; window < windowCount; window++) {
+    for (unsigned int window = 0; window < windowCount; window++) {
 
 #ifdef DEBUG
         Serial.print("building Window #");
         Serial.println(window);
 #endif
+
         std::vector<std::vector<float>> window_samples = {};
         int timestamp = millis();
 
@@ -37,6 +38,7 @@ bool actigraph::run() {
         }
         data.push_back(window_samples);
     }
+    xl.stop(); // turn off accelerometer
 
 #ifdef DEBUG
     Serial.println("done building windows");
@@ -61,10 +63,10 @@ bool actigraph::goodAngle() {
     std::vector<float> yaws;    // left / right head rotation (looking)
 
     // traverse windows
-    for (int window = 0; window < data.size(); window++) {
+    for (unsigned int window = 0; window < data.size(); window++) {
 
         // traverse measurements in window
-        for (int xyz = 0; xyz < data[window].size(); xyz++) {
+        for (unsigned int xyz = 0; xyz < data[window].size(); xyz++) {
             float x = data[window][xyz][0];
             float y = data[window][xyz][1];
             float z = data[window][xyz][2];
@@ -102,11 +104,11 @@ bool actigraph::goodAngle() {
 
 bool actigraph::goodMovement() {
     // perform check on each window
-    for (int window = 0; window < data.size(); window++) {
+    for (unsigned int window = 0; window < data.size(); window++) {
         std::vector<float> windowMag = {};
 
         // convert from x y z vectors to magnitude
-        for (int sample = 0; sample < data[window].size(); sample++) {
+        for (unsigned int sample = 0; sample < data[window].size(); sample++) {
             float x = data[window][sample][0];
             float y = data[window][sample][1];
             float z = data[window][sample][2];
@@ -166,7 +168,7 @@ float actigraph::yaw(float x, float y, float z) {
 
 float actigraph::mean(const std::vector<float> &vals) {
     float mean = 0.0;
-    for (int i = 0; i < vals.size(); i++) { // total sum of values
+    for (unsigned int i = 0; i < vals.size(); i++) { // total sum of values
         mean += vals[i];
     }
     if (vals.size() > 0) { // avoid divide by zero
@@ -183,7 +185,7 @@ float actigraph::standardDeviation(const std::vector<float> &vals) {
     float avg = mean(vals);
     float standardDeviation = 0.0;
 
-    for (int i = 0; i < vals.size(); i++) { // squared sum
+    for (unsigned int i = 0; i < vals.size(); i++) { // squared sum
         standardDeviation += (vals[i] - avg) * (vals[i] - avg);
     }
 

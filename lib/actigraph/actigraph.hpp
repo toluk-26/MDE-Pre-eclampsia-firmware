@@ -74,10 +74,11 @@ class actigraph {
               // data[0][0] is the first xyz measurment: std::vector
               // (x,y,z)
 
-    // ADJUST FOLLOWING VALUES AS NECESSARY
-    int windowLength = 5;  // number of seconds in a measurement window
-    int windowCount = 5;   // number of windows to decide movement status
-    int maxHeadAngle = 30; // max head angle in degrees to be considered supine
+    /** @todo ADJUST FOLLOWING VALUES AS NECESSARY */
+    unsigned int windowLength = 5; // number of seconds in a measurement window
+    unsigned int windowCount = 5; // number of windows to decide movement status
+    unsigned int maxHeadAngle =
+        30; // max head angle in degrees to be considered supine
 
     float movementThreshold = 0.15; // motion standard deviation threshold
 };
