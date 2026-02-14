@@ -6,8 +6,8 @@ Date: 2026/02/07
 Modified:
 */
 
-#ifndef HEADER_FILE_H
-#define HEADER_FILE_H
+#ifndef ACCELEROMETER_H
+#define ACCELEROMETER_H
 
 #include "LSM6DS3.h"
 #include <vector>
