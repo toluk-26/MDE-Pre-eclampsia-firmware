@@ -1,30 +1,10 @@
 #include "fsm.h"
 
-enum SystemState {
-    STATE_OFF,
-    STATE_INIT,
-    STATE_LOW_BATT,
-    STATE_CHARGING,
-    STATE_IDLE,
-    STATE_CONDITION_CHECK,
-    STATE_MEASURE_BP,
-    STATE_BP_HIGH,
-    STATE_BP_CRITICAL,
-    STATE_DONE
-};
-
-static SystemState currentState = STATE_OFF;
-
-void initFSM() {
-    currentState = STATE_INIT;
-}
-
-void runFSM() {
+void FSM::run() {
     switch (currentState) {
 
     case STATE_OFF:
-        if (powerSwitchOn())
-            currentState = STATE_INIT;
+        if (powerSwitchOn()) currentState = STATE_INIT;
         break;
 
     case STATE_INIT:
@@ -40,8 +20,7 @@ void runFSM() {
 
     case STATE_LOW_BATT:
         blinkYellow();
-        if (isCharging())
-            currentState = STATE_CHARGING;
+        if (isCharging()) currentState = STATE_CHARGING;
         break;
 
     case STATE_CHARGING:
@@ -52,8 +31,7 @@ void runFSM() {
 
     case STATE_IDLE:
         enterLowPowerMode();
-        if (rtcTriggered())
-            currentState = STATE_CONDITION_CHECK;
+        if (rtcTriggered()) currentState = STATE_CONDITION_CHECK;
         break;
 
     case STATE_CONDITION_CHECK:

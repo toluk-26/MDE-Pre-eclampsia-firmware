@@ -6,9 +6,7 @@
  */
 
 #include "bt.hpp"
-#include <Adafruit_TinyUSB.h>
 #include <Arduino.h>
-#include <bluefruit.h>
 
 #ifndef DEBUG
 #error "you seem to be in the wrong env"
