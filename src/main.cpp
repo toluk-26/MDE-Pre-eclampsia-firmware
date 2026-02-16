@@ -1,5 +1,8 @@
+// #include "fsm.h"
+// #include "indicators.h"
+// #include "power.h"
+// #include "sensors.h"
 #include <Arduino.h>
-#include <Wire.h>
 
 void setup() {
     Serial.begin(115200);
