@@ -91,11 +91,13 @@ class FlashLog {
 #pragma pack(pop)
 
     struct ConfigLoad {
-
         uint32_t pid; // patient id TODO: confirm if size is okay
         uint32_t thres_dia;
         uint32_t thres_sys;
+        uint32_t p_index;
     };
+
+    ConfigLoad configload;
 
     SPIClass _SPI_2;
     Adafruit_FlashTransport_SPI _QFlashTransport;

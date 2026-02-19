@@ -87,6 +87,20 @@ bool FlashLog::append(uint8_t type, const std::vector<uint8_t> &payload) {
     return true;
 }
 
+bool FlashLog::getConfig() {
+    if (!this->_flashOk) {
+#ifdef DEBUG
+        Serial.println("ERROR: tried to write config. flash is not okay");
+#endif
+        return false;
+    }
+    ConfigLoad c;
+    _qFlash.readBuffer(0, (uint8_t *)&c, sizeof(configload));
+
+    // check config load from flash
+    // TODO:
+}
+
 bool FlashLog::_findTail() {
     uint32_t addr = LOG_OFFSET;
 
@@ -117,6 +131,23 @@ bool FlashLog::_findTail() {
     return false;
 }
 
+bool FlashLog::setConfig() {
+    if (!this->_flashOk) {
+#ifdef DEBUG
+        Serial.println("ERROR: tried to write config. flash is not okay");
+#endif
+        return false;
+    }
+
+#ifdef DEBUG
+    Serial.printf("STATUS: writing to address 0x%06x\n", 0);
+#endif
+    _qFlash.writeBuffer(0, (uint8_t *)&configload,
+                        sizeof(configload)); // write header
+
+    return true;
+}
+
 void FlashLog::cleanConfig() {
     _qFlash.eraseSector(0);
 #ifdef DEBUG
@@ -131,13 +162,14 @@ void FlashLog::cleanConfig() {
 void FlashLog::cleanLogs() {
     const uint logSize = _logTailAddr - LOG_OFFSET;
     const uint numOfLogSectors = logSize / SECTOR_SIZE + 16;
-    if (numOfLogSectors < 32){
+    if (numOfLogSectors < 32) {
 #ifdef DEBUG
-        Serial.printf("STATUS: erasing small log of %u sectors\n", numOfLogSectors - 16);
+        Serial.printf("STATUS: erasing small log of %u sectors\n",
+                      numOfLogSectors - 16);
 #endif
         for (uint i = 16; i <= numOfLogSectors; i++)
-            _qFlash.erasePage(i);}
-    else {
+            _qFlash.erasePage(i);
+    } else {
 #ifdef DEBUG
         Serial.println("STATUS: erasing large log");
 #endif
@@ -189,6 +221,7 @@ void FlashLog::printConfig() {
 
     Serial.println("---Config Data--");
     Serial.printf("PID:\t%u\n", c.pid);
+    Serial.printf("P Index:\t%u\n", c.p_index);
 
     Serial.println("Threshold Values");
     Serial.printf("\tDiastolic:\t%u\n", c.thres_dia);
