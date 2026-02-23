@@ -1,90 +1,104 @@
 #include "fsm.h"
 
-enum SystemState {
-    STATE_OFF,
-    STATE_INIT,
-    STATE_LOW_BATT,
-    STATE_CHARGING,
-    STATE_IDLE,
-    STATE_CONDITION_CHECK,
-    STATE_MEASURE_BP,
-    STATE_BP_HIGH,
-    STATE_BP_CRITICAL,
-    STATE_DONE
-};
+FSM::FSM(Sensors &sensors_, Indicators &indicators_, Power &power_)
+    : sensors(sensors_), indicators(indicators_), power(power_) {}
 
-static SystemState currentState = STATE_OFF;
-
-void initFSM() {
-    currentState = STATE_INIT;
-}
-
-void runFSM() {
+void FSM::run() {
     switch (currentState) {
-
     case STATE_OFF:
-        if (powerSwitchOn())
-            currentState = STATE_INIT;
+        if (power.powerSwitchOn()) currentState = STATE_INIT;
         break;
-
     case STATE_INIT:
-        initSensors();
-        initIndicators();
-        initRTC();
-
-        if (isBatteryLow())
-            currentState = STATE_LOW_BATT;
-        else
-            currentState = STATE_IDLE;
+        handleInit();
         break;
-
     case STATE_LOW_BATT:
-        blinkYellow();
-        if (isCharging())
-            currentState = STATE_CHARGING;
+        handleLowBattery();
         break;
-
     case STATE_CHARGING:
-        blinkYellow();
-        if (!isCharging() && getBatteryPercent() > 30)
-            currentState = STATE_INIT;
+        handleCharging();
         break;
-
+    case STATE_CALIBRATE:
+        handleCalibrate();
+        break;
     case STATE_IDLE:
-        enterLowPowerMode();
-        if (rtcTriggered())
-            currentState = STATE_CONDITION_CHECK;
+        handleIdle();
         break;
-
     case STATE_CONDITION_CHECK:
-        if (isUserStill() && isPositionValid())
-            currentState = STATE_MEASURE_BP;
-        else {
-            scheduleRetry(20);
-            currentState = STATE_IDLE;
-        }
+        handleConditionCheck();
         break;
-
     case STATE_MEASURE_BP:
-        BPStatus status = measureBP();
-
-        if (status == BP_CRITICAL)
-            currentState = STATE_BP_CRITICAL;
-        else if (status == BP_HIGH)
-            currentState = STATE_BP_HIGH;
-        else
-            currentState = STATE_DONE;
+        handleMeasureBP();
         break;
-
     case STATE_BP_HIGH:
-        blinkRed();
-        currentState = STATE_DONE;
+        handleBPHigh();
         break;
-
     case STATE_BP_CRITICAL:
-        blinkRed();
-        soundBuzzer();
-        currentState = STATE_DONE;
+        handleBPCritical();
+        break;
+    case STATE_DONE:
+        // One reading done; power off
+        power.enterLowPowerMode();
         break;
     }
+}
+
+// ------------------ Handlers ------------------
+void FSM::handleInit() {
+    sensors.init();
+    indicators.init();
+
+    if (power.isBatteryLow())
+        currentState = STATE_LOW_BATT;
+    else
+        currentState = STATE_CALIBRATE;
+}
+
+void FSM::handleLowBattery() {
+    indicators.blinkYellow(10000); // 10 seconds
+    if (power.isCharging()) currentState = STATE_CHARGING;
+}
+
+void FSM::handleCharging() {
+    indicators.blinkYellow(500); // fast blink
+    if (!power.isCharging() && power.getBatteryPercent() > 30)
+        currentState = STATE_INIT;
+}
+
+void FSM::handleCalibrate() {
+    sensors.calibrate();
+    currentState = STATE_IDLE;
+}
+
+void FSM::handleIdle() {
+    power.enterLowPowerMode();
+    if (sensors.rtcTriggered()) currentState = STATE_CONDITION_CHECK;
+}
+
+void FSM::handleConditionCheck() {
+    if (sensors.motionOK() && sensors.positionOK())
+        currentState = STATE_MEASURE_BP;
+    else {
+        power.scheduleRetry(20); // wait 20 min
+        currentState = STATE_IDLE;
+    }
+}
+
+void FSM::handleMeasureBP() {
+    BPStatus status = sensors.measureBP();
+    if (status == BP_CRITICAL)
+        currentState = STATE_BP_CRITICAL;
+    else if (status == BP_HIGH)
+        currentState = STATE_BP_HIGH;
+    else
+        currentState = STATE_DONE;
+}
+
+void FSM::handleBPHigh() {
+    indicators.alertHighBP();
+    currentState = STATE_DONE;
+}
+
+void FSM::handleBPCritical() {
+    indicators.alertCriticalBP();
+    currentState = STATE_DONE;
 }
