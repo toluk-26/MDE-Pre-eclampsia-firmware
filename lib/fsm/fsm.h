@@ -1,4 +1,5 @@
 #pragma once
+#include "bpstatus.h" // include BPStatus enum
 #include "indicators.h"
 #include "power.h"
 #include "sensors.h"
@@ -25,15 +26,10 @@ class FSM {
 
     SystemState currentState = STATE_OFF;
 
-    // BP result enum
-    enum BPStatus { BP_OK, BP_HIGH, BP_CRITICAL };
-
-    // References to modular components
     Sensors &sensors;
     Indicators &indicators;
     Power &power;
 
-    // FSM helpers
     void handleInit();
     void handleLowBattery();
     void handleCharging();
