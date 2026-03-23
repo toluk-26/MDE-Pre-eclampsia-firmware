@@ -9,7 +9,7 @@ bool Power::isCharging() { return false; }        // detect charger
 float Power::getBatteryPercent() { return 50.0; } // map ADC voltage
 
 void Power::enterLowPowerMode() {
-    // implement deep sleep
+    // implement deep sleep, mode must specifically allow the rtc to conitnue the function
 }
 
 void Power::scheduleRetry(int minutes) {

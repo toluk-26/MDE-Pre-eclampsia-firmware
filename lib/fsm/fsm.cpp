@@ -1,4 +1,5 @@
 #include "fsm.h"
+#include "flashlog.hpp" 
 
 FSM::FSM(Sensors &sensors_, Indicators &indicators_, Power &power_)
     : sensors(sensors_), indicators(indicators_), power(power_) {}
@@ -13,6 +14,9 @@ void FSM::run() {
         break;
     case STATE_LOW_BATT:
         handleLowBattery();
+        break;
+    case STATE_CHECK_CONFIG:
+        handleCheckConfig();
         break;
     case STATE_CHARGING:
         handleCharging();
@@ -36,32 +40,52 @@ void FSM::run() {
         handleBPCritical();
         break;
     case STATE_DONE:
-        // One reading done; power off
         power.enterLowPowerMode();
         break;
     }
 }
 
-// ------------------ Handlers ------------------
 void FSM::handleInit() {
     sensors.init();
     indicators.init();
-
     if (power.isBatteryLow())
         currentState = STATE_LOW_BATT;
     else
-        currentState = STATE_CALIBRATE;
+        currentState = STATE_CHECK_CONFIG;
 }
 
 void FSM::handleLowBattery() {
-    indicators.blinkYellow(10000); // 10 seconds
+    indicators.blinkYellow(10000);
     if (power.isCharging()) currentState = STATE_CHARGING;
 }
 
 void FSM::handleCharging() {
-    indicators.blinkYellow(500); // fast blink
-    if (!power.isCharging() && power.getBatteryPercent() > 30)
+    indicators.blinkYellow(500);
+    if (!power.isCharging() && power.getBatteryPercent() > 30) //low battery is below 30 percent
         currentState = STATE_INIT;
+}
+
+void FSM::handleCheckConfig() {
+    // Attempt to load config from flash
+    bool configValid = mem.getConfig(); // true if config loaded correctly
+
+    if (!configValid) {
+#ifdef DEBUG
+        Serial.println(
+            "CONFIG ERROR: invalid or missing config. Resetting defaults...");
+#endif
+        mem.cleanConfig(); // erase config sector
+        mem.setConfig();   // write default config using FlashLog's internal
+                           // defaults
+#ifdef DEBUG
+        Serial.println("CONFIG: Default config written");
+#endif
+    } else {
+#ifdef DEBUG
+        Serial.println("CONFIG: Valid config found");
+#endif
+    }
+    currentState = STATE_CALIBRATE;
 }
 
 void FSM::handleCalibrate() {
@@ -78,16 +102,16 @@ void FSM::handleConditionCheck() {
     if (sensors.motionOK() && sensors.positionOK())
         currentState = STATE_MEASURE_BP;
     else {
-        power.scheduleRetry(20); // wait 20 min
+        power.scheduleRetry(60); //changed from 20 mins to 60 mins as per Sam's comment on REM sleep
         currentState = STATE_IDLE;
     }
 }
 
 void FSM::handleMeasureBP() {
     BPStatus status = sensors.measureBP();
-    if (status == BP_CRITICAL)
+    if (status == BPStatus::CRITICAL)
         currentState = STATE_BP_CRITICAL;
-    else if (status == BP_HIGH)
+    else if (status == BPStatus::ELEVATED)
         currentState = STATE_BP_HIGH;
     else
         currentState = STATE_DONE;

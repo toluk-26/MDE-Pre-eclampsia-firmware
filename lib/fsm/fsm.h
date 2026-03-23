@@ -16,6 +16,7 @@ class FSM {
         STATE_LOW_BATT,
         STATE_CHARGING,
         STATE_CALIBRATE,
+        STATE_CHECK_CONFIG,
         STATE_IDLE,
         STATE_CONDITION_CHECK,
         STATE_MEASURE_BP,
@@ -33,6 +34,7 @@ class FSM {
     void handleInit();
     void handleLowBattery();
     void handleCharging();
+    void handleCheckConfig();
     void handleCalibrate();
     void handleIdle();
     void handleConditionCheck();
