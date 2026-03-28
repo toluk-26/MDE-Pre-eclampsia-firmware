@@ -1,24 +1,38 @@
 #include "sensors.h"
-#include <MAX30105.h>
+#include "clock.hpp"
+#include <Arduino.h>
 
-MAX30105 max30101;
-
-void initSensors() {
-	max30101.begin();
-	max30101.setup();
+void Sensors::init() {
+    Wire.begin();
+    imu.begin();
+    ppg.begin(Wire);
 }
 
-bool isUserStill() {
-	// Use IMU thresholds
-	return true; // placeholder
+void Sensors::calibrate() {
+    // implement calibration
 }
 
-bool isPositionValid() {
-	// Forehead orientation logic
-	return true;
+bool Sensors::motionOK() {
+    float ax = imu.readFloatAccelX();
+    float ay = imu.readFloatAccelY();
+    float az = imu.readFloatAccelZ();
+    return abs(ax) < 0.2 && abs(ay) < 0.2;
 }
 
-BPStatus measureBP() {
-	// PPG acquisition + algorithm
-	return BP_OK;
+bool Sensors::positionOK() {
+    float ax = imu.readFloatAccelX();
+    float ay = imu.readFloatAccelY();
+    float az = imu.readFloatAccelZ();
+    return az > 0.7;
+}
+
+bool Sensors::rtcTriggered() { return ::clock.tick(); }
+
+BPStatus Sensors::measureBP() {
+    int systolic = random(110, 170);
+    int diastolic = random(70, 120);
+
+    if (systolic >= 160 || diastolic >= 110) return BPStatus::CRITICAL;
+    if (systolic >= 140 || diastolic >= 90) return BPStatus::ELEVATED;
+    return BPStatus::OK;
 }

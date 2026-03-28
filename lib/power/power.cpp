@@ -1,10 +1,17 @@
-#include "indicators.h"
+#include "power.h"
 
-void initIndicators() {
-	pinMode(LED_BUILTIN, OUTPUT);
+#define BATTERY_PIN A0
+#define CHARGER_PIN 5
+
+bool Power::powerSwitchOn() { return true; }      // implement switch detection
+bool Power::isBatteryLow() { return false; }      // read battery
+bool Power::isCharging() { return false; }        // detect charger
+float Power::getBatteryPercent() { return 50.0; } // map ADC voltage
+
+void Power::enterLowPowerMode() {
+    // implement deep sleep, mode must specifically allow the rtc to conitnue the function
 }
 
-void blinkYellow() { /* timing logic */ }
-void blinkRed() { /* timing logic */ }
-void soundBuzzer() { /* GPIO on/off */ }
-
+void Power::scheduleRetry(int minutes) {
+    // implement timer
+}

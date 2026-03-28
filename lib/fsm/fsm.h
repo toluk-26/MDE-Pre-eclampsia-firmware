@@ -1,8 +1,12 @@
 #pragma once
+#include "bpstatus.h" // include BPStatus enum
+#include "indicators.h"
+#include "power.h"
+#include "sensors.h"
 
 class FSM {
   public:
-    FSM() : currentState(SystemState::STATE_INIT) {};
+    FSM(Sensors &sensors, Indicators &indicators, Power &power);
     void run();
 
   private:
@@ -11,6 +15,8 @@ class FSM {
         STATE_INIT,
         STATE_LOW_BATT,
         STATE_CHARGING,
+        STATE_CALIBRATE,
+        STATE_CHECK_CONFIG,
         STATE_IDLE,
         STATE_CONDITION_CHECK,
         STATE_MEASURE_BP,
@@ -19,5 +25,20 @@ class FSM {
         STATE_DONE
     };
 
-    SystemState currentState = SystemState::STATE_OFF;
+    SystemState currentState = STATE_OFF;
+
+    Sensors &sensors;
+    Indicators &indicators;
+    Power &power;
+
+    void handleInit();
+    void handleLowBattery();
+    void handleCharging();
+    void handleCheckConfig();
+    void handleCalibrate();
+    void handleIdle();
+    void handleConditionCheck();
+    void handleMeasureBP();
+    void handleBPHigh();
+    void handleBPCritical();
 };

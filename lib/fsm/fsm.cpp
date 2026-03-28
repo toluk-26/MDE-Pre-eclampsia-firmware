@@ -1,68 +1,128 @@
 #include "fsm.h"
+#include "flashlog.hpp" 
+
+FSM::FSM(Sensors &sensors_, Indicators &indicators_, Power &power_)
+    : sensors(sensors_), indicators(indicators_), power(power_) {}
 
 void FSM::run() {
     switch (currentState) {
-
     case STATE_OFF:
-        if (powerSwitchOn()) currentState = STATE_INIT;
+        if (power.powerSwitchOn()) currentState = STATE_INIT;
         break;
-
     case STATE_INIT:
-        initSensors();
-        initIndicators();
-        initRTC();
-
-        if (isBatteryLow())
-            currentState = STATE_LOW_BATT;
-        else
-            currentState = STATE_IDLE;
+        handleInit();
         break;
-
     case STATE_LOW_BATT:
-        blinkYellow();
-        if (isCharging()) currentState = STATE_CHARGING;
+        handleLowBattery();
         break;
-
+    case STATE_CHECK_CONFIG:
+        handleCheckConfig();
+        break;
     case STATE_CHARGING:
-        blinkYellow();
-        if (!isCharging() && getBatteryPercent() > 30)
-            currentState = STATE_INIT;
+        handleCharging();
         break;
-
+    case STATE_CALIBRATE:
+        handleCalibrate();
+        break;
     case STATE_IDLE:
-        enterLowPowerMode();
-        if (rtcTriggered()) currentState = STATE_CONDITION_CHECK;
+        handleIdle();
         break;
-
     case STATE_CONDITION_CHECK:
-        if (isUserStill() && isPositionValid())
-            currentState = STATE_MEASURE_BP;
-        else {
-            scheduleRetry(20);
-            currentState = STATE_IDLE;
-        }
+        handleConditionCheck();
         break;
-
     case STATE_MEASURE_BP:
-        BPStatus status = measureBP();
-
-        if (status == BP_CRITICAL)
-            currentState = STATE_BP_CRITICAL;
-        else if (status == BP_HIGH)
-            currentState = STATE_BP_HIGH;
-        else
-            currentState = STATE_DONE;
+        handleMeasureBP();
         break;
-
     case STATE_BP_HIGH:
-        blinkRed();
-        currentState = STATE_DONE;
+        handleBPHigh();
         break;
-
     case STATE_BP_CRITICAL:
-        blinkRed();
-        soundBuzzer();
-        currentState = STATE_DONE;
+        handleBPCritical();
+        break;
+    case STATE_DONE:
+        power.enterLowPowerMode();
         break;
     }
+}
+
+void FSM::handleInit() {
+    sensors.init();
+    indicators.init();
+    if (power.isBatteryLow())
+        currentState = STATE_LOW_BATT;
+    else
+        currentState = STATE_CHECK_CONFIG;
+}
+
+void FSM::handleLowBattery() {
+    indicators.blinkYellow(10000);
+    if (power.isCharging()) currentState = STATE_CHARGING;
+}
+
+void FSM::handleCharging() {
+    indicators.blinkYellow(500);
+    if (!power.isCharging() && power.getBatteryPercent() > 30) //low battery is below 30 percent
+        currentState = STATE_INIT;
+}
+
+void FSM::handleCheckConfig() {
+    // Attempt to load config from flash
+    bool configValid = mem.getConfig(); // true if config loaded correctly
+
+    if (!configValid) {
+#ifdef DEBUG
+        Serial.println(
+            "CONFIG ERROR: invalid or missing config. Resetting defaults...");
+#endif
+        mem.cleanConfig(); // erase config sector
+        mem.setConfig();   // write default config using FlashLog's internal
+                           // defaults
+#ifdef DEBUG
+        Serial.println("CONFIG: Default config written");
+#endif
+    } else {
+#ifdef DEBUG
+        Serial.println("CONFIG: Valid config found");
+#endif
+    }
+    currentState = STATE_CALIBRATE;
+}
+
+void FSM::handleCalibrate() {
+    sensors.calibrate();
+    currentState = STATE_IDLE;
+}
+
+void FSM::handleIdle() {
+    power.enterLowPowerMode();
+    if (sensors.rtcTriggered()) currentState = STATE_CONDITION_CHECK;
+}
+
+void FSM::handleConditionCheck() {
+    if (sensors.motionOK() && sensors.positionOK())
+        currentState = STATE_MEASURE_BP;
+    else {
+        power.scheduleRetry(60); //changed from 20 mins to 60 mins as per Sam's comment on REM sleep
+        currentState = STATE_IDLE;
+    }
+}
+
+void FSM::handleMeasureBP() {
+    BPStatus status = sensors.measureBP();
+    if (status == BPStatus::CRITICAL)
+        currentState = STATE_BP_CRITICAL;
+    else if (status == BPStatus::ELEVATED)
+        currentState = STATE_BP_HIGH;
+    else
+        currentState = STATE_DONE;
+}
+
+void FSM::handleBPHigh() {
+    indicators.alertHighBP();
+    currentState = STATE_DONE;
+}
+
+void FSM::handleBPCritical() {
+    indicators.alertCriticalBP();
+    currentState = STATE_DONE;
 }
