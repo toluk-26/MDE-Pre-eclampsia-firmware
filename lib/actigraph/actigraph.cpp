@@ -72,7 +72,7 @@ bool actigraph::goodAngle() {
             float z = data[window][xyz][2];
 
             // Device is not deployed or body is unacceptably positioned
-            if (z > 0) {
+            if (z < 0) {
 #ifdef DEBUG
                 Serial.print("device is inverted, z= ");
                 Serial.println(z);
@@ -139,13 +139,13 @@ bool actigraph::goodMovement() {
 float actigraph::pitch(float x, float y, float z) {
     float pitch = 0.0;
 #if defined(usb_c_to_chin)
-    pitch = atan2(-x, -z);
+    pitch = atan2(-x, z);
 #elif defined(usb_c_to_crown)
-    pitch = atan2(x, -z);
+    pitch = atan2(x, z);
 #elif defined(usb_c_to_left_ear)
-    pitch = atan2(y, -z);
+    pitch = atan2(y, z);
 #elif defined(usb_c_to_right_ear)
-    pitch = atan2(-y, -z);
+    pitch = atan2(-y, z);
 #endif
     pitch = pitch * (180.0 / 3.14159); // convert to degrees
     return pitch;
@@ -154,13 +154,13 @@ float actigraph::pitch(float x, float y, float z) {
 float actigraph::yaw(float x, float y, float z) {
     float yaw = 0.0;
 #if defined(usb_c_to_chin)
-    yaw = atan2(-y, -z);
+    yaw = atan2(-y, z);
 #elif defined(usb_c_to_crown)
-    yaw = atan2(y, -z);
+    yaw = atan2(y, z);
 #elif defined(usb_c_to_left_ear)
-    yaw = atan2(x, -z);
+    yaw = atan2(x, z);
 #elif defined(usb_c_to_right_ear)
-    yaw = atan2(-x, -z);
+    yaw = atan2(-x, z);
 #endif
     yaw = yaw * (180.0 / 3.14159); // convert to degrees
     return yaw;
