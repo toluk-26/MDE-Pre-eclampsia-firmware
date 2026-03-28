@@ -12,7 +12,7 @@
 #error "you seem to be in the wrong env"
 #endif
 
-PESBt bt;
+BleManager bt;
 
 void setup() {
     Serial.begin(115200);
@@ -25,7 +25,7 @@ void setup() {
     Serial.println("        BLE Program");
     Serial.println("-----------------------------\n");
 
-    bt.init();
+    bt.begin();
 }
 
 void loop() {}

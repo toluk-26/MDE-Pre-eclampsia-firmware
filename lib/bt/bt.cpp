@@ -7,29 +7,20 @@
 #include "bt.hpp"
 #include "bletis.hpp"
 
-// BLE Services
-BLEDfu bledfu; // OTA DFU service
-BLEDis bledis; // device information
-BLEBas blebas; // battery info
-BLETis bletis; // time sync
+void BleManager::begin() {
+    this->configBleHardware(); // configure BLE
+    _dfu.begin();              // start DFU service
+    this->configDeviceInfo();  // start dev information service
+    _battery.begin();          // Battery Service
+    _battery.write(255);       // TODO: implement and remove
 
-void PESBt::init() {
-    this->ble_config(); // configure BLE
-
-    bledfu.begin(); // start DFU service
-
-    this->dev_info_config(); // start bledis which is dev information service
-
-    blebas.begin();    // Battery Service
-    blebas.write(255); // TODO: implement and remove
-
-    bletis.begin(); // Start Time Service
+    // bletis.begin(); // Start Time Service
 
     // Set up and start advertising
-    this->startAdv();
+    this->startAdvertising();
 }
 
-void PESBt::disconnect() {
+void BleManager::stop() {
     Bluefruit.Advertising.restartOnDisconnect(false);
     uint16_t connections = Bluefruit.connected();
     for (uint16_t conn = 0; conn < connections; conn++) {
@@ -40,7 +31,7 @@ void PESBt::disconnect() {
     Serial.println("STATUS: Disconnected bluetooth service");
 }
 
-void PESBt::startAdv(void) {
+void BleManager::startAdvertising(void) {
     // Advertising packet
     Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
     Bluefruit.Advertising.addTxPower();
@@ -69,7 +60,7 @@ void PESBt::startAdv(void) {
 }
 
 // callback invoked when central connects
-void PESBt::connect_callback(uint16_t conn_handle) {
+void BleManager::onConnect(uint16_t conn_handle) {
     // Get the reference to current connection
     BLEConnection *connection = Bluefruit.Connection(conn_handle);
 
@@ -84,7 +75,7 @@ void PESBt::connect_callback(uint16_t conn_handle) {
  * @param conn_handle connection where this event happens
  * @param reason is a BLE_HCI_STATUS_CODE which can be found in ble_hci.h
  */
-void PESBt::disconnect_callback(uint16_t conn_handle, uint8_t reason) {
+void BleManager::onDisconnect(uint16_t conn_handle, uint8_t reason) {
     (void)conn_handle;
     (void)reason;
 
@@ -92,7 +83,7 @@ void PESBt::disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     Serial.println(reason, HEX);
 }
 
-void PESBt::ble_config() {
+void BleManager::configBleHardware() {
     // Setup the BLE LED to be enabled on CONNECT
     // Note: This is actually the default behavior, but provided
     // here in case you want to control this LED manually via PIN 19
@@ -110,16 +101,16 @@ void PESBt::ble_config() {
     Bluefruit.setName(s.c_str());
 
     Bluefruit.setTxPower(4); // Check bluefruit.h for supported values
-    Bluefruit.Periph.setConnectCallback(PESBt::connect_callback);
-    Bluefruit.Periph.setDisconnectCallback(PESBt::disconnect_callback);
+    Bluefruit.Periph.setConnectCallback(BleManager::onConnect);
+    Bluefruit.Periph.setDisconnectCallback(BleManager::onDisconnect);
 }
 
-void PESBt::dev_info_config() {
+void BleManager::configDeviceInfo() {
     // Configure and Start Device Information Service
-    bledis.setManufacturer("S26-09");
-    bledis.setModel("Preeclampsia Screener"); // TODO: change to something more
-                                              // meaningful? numeral?
-    bledis.setSoftwareRev(SOFTWARE_REVISION);
-    bledis.setHardwareRev(HARDWARE_REVISION);
-    bledis.begin();
+    _devInfo.setManufacturer("S26-09");
+    _devInfo.setModel("Preeclampsia Screener"); // TODO: change to something
+                                                // more meaningful? numeral?
+    _devInfo.setSoftwareRev(SOFTWARE_REVISION);
+    _devInfo.setHardwareRev(HARDWARE_REVISION);
+    _devInfo.begin();
 }
