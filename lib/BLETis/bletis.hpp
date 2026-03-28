@@ -9,7 +9,7 @@
 
 #include "BLECharacteristic.h"
 #include "BLEService.h"
-#include "bluefruit_common.h"
+#include "bluefruit.h"
 
 #define UUID_TIME_SERVICE "043f0000-0ff5-45d1-9502-db9d40757da2"
 #define UUID_CHR_TIME "043f0001-0ff5-45d1-9502-db9d40757da2"
