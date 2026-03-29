@@ -6,6 +6,7 @@
  */
 
 #include "bt.hpp"
+#include "clock.hpp"
 #include <Arduino.h>
 
 #ifndef DEBUG
@@ -26,6 +27,9 @@ void setup() {
     Serial.println("-----------------------------\n");
 
     bt.begin();
+    clock.setAlarm(clock.getTime() + 60);
 }
 
-void loop() {}
+void loop() {
+    if (!clock.tick()) return;
+}

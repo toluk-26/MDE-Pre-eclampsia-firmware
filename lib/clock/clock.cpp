@@ -17,7 +17,7 @@
 #include <inttypes.h>
 #endif
 
-Time clock; // all rtc clock. call clock.tick() as much as possible
+Clock clock; // all rtc clock. call clock.tick() as much as possible
 
 static volatile bool alarmFlag = false;    // if the alarm interrupt
 static volatile bool snoozeFlag = false;   // if the snooze interrupt
@@ -26,18 +26,18 @@ static volatile bool overflowFlag = false; // if the overflow interrupt
 // find factor to convert between time and counter count
 constexpr uint PRESCALAR_FACTOR = 32768 / (PRESCALER_C + 1);
 
-extern "C" void RTC0_IRQHandler(void) {
+extern "C" void RTC2_IRQHandler(void) {
     // Check and clear event FIRST
-    if (nrf_rtc_event_check(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0)) {
-        nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
+    if (nrf_rtc_event_check(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0)) {
+        nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
         alarmFlag = true;
     }
-    if (nrf_rtc_event_check(NRF_RTC0, NRF_RTC_EVENT_OVERFLOW)) {
-        nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_OVERFLOW);
+    if (nrf_rtc_event_check(NRF_RTC2, NRF_RTC_EVENT_OVERFLOW)) {
+        nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_OVERFLOW);
         overflowFlag = true;
     }
-    if (nrf_rtc_event_check(NRF_RTC0, NRF_RTC_EVENT_COMPARE_1)) {
-        nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_1);
+    if (nrf_rtc_event_check(NRF_RTC2, NRF_RTC_EVENT_COMPARE_1)) {
+        nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_1);
         snoozeFlag = true;
     }
     // On Cortex-M4, ensure the store completes before exiting ISR
@@ -45,31 +45,34 @@ extern "C" void RTC0_IRQHandler(void) {
     __ISB();
 }
 
-Time::Time() {
+Clock::Clock() {
     // prep
-    nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_STOP);  // stop rtc
-    nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_CLEAR); // clear
-    nrf_rtc_prescaler_set(NRF_RTC0, PRESCALER_C);       // set prescaler
+    nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_STOP);  // stop rtc
+    nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR); // clear
+    nrf_rtc_prescaler_set(NRF_RTC2, PRESCALER_C);       // set prescaler
 
     // clear events
-    nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
-    nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_1);
-    nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_OVERFLOW);
+    nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+    nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_1);
+    nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_OVERFLOW);
 
     // enable overflow interrupt
-    nrf_rtc_int_enable(NRF_RTC0, NRF_RTC_INT_OVERFLOW_MASK);
+    nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_OVERFLOW_MASK);
+
+    // TODO: move and enable
 
     // prepare interrupt
-    NVIC_DisableIRQ(RTC0_IRQn);
-    NVIC_ClearPendingIRQ(RTC0_IRQn);
-    NVIC_SetPriority(RTC0_IRQn, 3);
-    NVIC_EnableIRQ(RTC0_IRQn);
+    NVIC_DisableIRQ(RTC2_IRQn);
+    NVIC_ClearPendingIRQ(RTC2_IRQn);
+    NVIC_SetPriority(RTC2_IRQn, 6);
+    NVIC_EnableIRQ(RTC2_IRQn);
 
-    // begin
-    nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_START);
+
+    // begin 
+    nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_START);
 }
 
-bool Time::tick() {
+bool Clock::tick() {
     // check if anything happened
     if (!(alarmFlag || snoozeFlag || overflowFlag)) return false;
 
@@ -94,13 +97,13 @@ bool Time::tick() {
     return true;
 }
 
-uint64_t Time::getTime() {
-    return _time + convertCounter(nrf_rtc_counter_get(NRF_RTC0));
+uint64_t Clock::getTime() {
+    return _time + convertCounter(nrf_rtc_counter_get(NRF_RTC2));
 }
 
-void Time::setTime(uint64_t time) {
+void Clock::setTime(uint64_t time) {
     _time = time;
-    nrf_rtc_task_trigger(NRF_RTC0, NRF_RTC_TASK_CLEAR);
+    nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
 #ifdef DEBUG
     Serial.print("STATUS: base time updated to ");
     print64(time);
@@ -108,7 +111,7 @@ void Time::setTime(uint64_t time) {
 #endif
 }
 
-bool Time::setAlarm(uint64_t time) {
+bool Clock::setAlarm(uint64_t time) {
     if (time < _time) {
 #ifdef DEBUG
         Serial.println("ERROR: alarm input time is smaller than base time. "
@@ -125,14 +128,14 @@ bool Time::setAlarm(uint64_t time) {
     }
 
     // enable interrupt
-    if (!nrf_rtc_int_enable_check(NRF_RTC0, NRF_RTC_INT_COMPARE0_MASK)) {
-        nrf_rtc_event_clear(NRF_RTC0, NRF_RTC_EVENT_COMPARE_0);
-        nrf_rtc_int_enable(NRF_RTC0, NRF_RTC_INT_COMPARE0_MASK);
+    if (!nrf_rtc_int_enable_check(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK)) {
+        nrf_rtc_event_clear(NRF_RTC2, NRF_RTC_EVENT_COMPARE_0);
+        nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_COMPARE0_MASK);
     }
 
     // find how much time in the future and convert to count
     uint countercompare = (time - _time) * PRESCALAR_FACTOR;
-    nrf_rtc_cc_set(NRF_RTC0, 0, countercompare); // set cc register
+    nrf_rtc_cc_set(NRF_RTC2, 0, countercompare); // set cc register
 
 #ifdef DEBUG
     Serial.printf("STATUS: alarm set for %u seconds\n", (time - getTime()));
@@ -141,7 +144,7 @@ bool Time::setAlarm(uint64_t time) {
     return true;
 }
 
-uint64_t Time::convertCounter(uint32_t counter) {
+uint64_t Clock::convertCounter(uint32_t counter) {
     return counter / PRESCALAR_FACTOR;
 }
 

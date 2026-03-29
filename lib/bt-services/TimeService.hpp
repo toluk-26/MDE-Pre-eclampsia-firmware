@@ -18,10 +18,10 @@
 /**
  * @brief Time BLE Service. will update RTC time from phone app
  */
-class BLETis : public BLEService {
+class TimeService : public BLEService {
   public:
     /// @brief sets Service UUID
-    BLETis();
+    TimeService();
     /// @brief sets characteristics properties
     virtual err_t begin();
 
@@ -32,12 +32,12 @@ class BLETis : public BLEService {
     /**
      * @brief time callback function
      */
-    static void bletis_time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                               uint8_t *data, uint16_t len);
+    static void time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+                        uint8_t *data, uint16_t len);
 
     /**
      * @brief timezone callback function
      */
-    static void bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                             uint8_t *data, uint16_t len);
+    static void tz_cb(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *data,
+                      uint16_t len);
 };

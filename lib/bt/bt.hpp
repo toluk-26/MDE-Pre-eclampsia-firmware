@@ -8,6 +8,8 @@
 #pragma once
 #include <bluefruit.h>
 
+#include "TimeService.hpp"
+
 class BleManager {
   public:
     /// @brief initialize ble and services
@@ -16,7 +18,7 @@ class BleManager {
     /// @brief turn off ble
     void stop();
 
-  protected:
+  private:
     /// @brief what to do on disconnect from phone
     static void onDisconnect(uint16_t conn_handle, uint8_t reason);
 
@@ -34,9 +36,10 @@ class BleManager {
      */
     void configBleHardware();
 
-  private:
     // BLE Services
     BLEDfu _dfu;     // OTA DFU service
     BLEDis _devInfo; // device information
     BLEBas _battery; // battery info
+    // TODO: add services here
+    TimeService timeService;
 };

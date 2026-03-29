@@ -14,9 +14,9 @@
 #define PRESCALER_C 4095 // Max value is 4095
 
 /// @brief functions to manipulate time and interrupts
-class Time {
+class Clock {
   public:
-    Time();
+    Clock();
 
     bool tick();
 
@@ -67,7 +67,7 @@ class Time {
     uint64_t convertCounter(uint32_t counter);
 };
 
-extern Time clock;
+extern Clock clock;
 
 #ifdef DEBUG
 /**

@@ -5,18 +5,18 @@
  * @date December 23, 2025
  */
 
-#include "bletis.hpp"
+#include "TimeService.hpp"
+#include "clock.hpp"
 
-BLETis::BLETis() : BLEService(UUID_TIME_SERVICE) {}
+TimeService::TimeService() : BLEService(UUID_TIME_SERVICE) {}
 
-err_t BLETis::begin() {
+err_t TimeService::begin() {
     // Invoke base class begin()
     VERIFY_STATUS(BLEService::begin());
 
     _time.setUuid(UUID_CHR_TIME);
-    _time.setProperties(CHR_PROPS_WRITE |
-                        CHR_PROPS_READ); // removed | CHR_PROPS_WRITE_WO_RESP
-    _time.setWriteCallback(BLETis::bletis_time_cb, true);
+    _time.setProperties(CHR_PROPS_WRITE | CHR_PROPS_READ);
+    _time.setWriteCallback(TimeService::time_cb, true);
 
     _time.setPermission(
         SECMODE_OPEN, // TODO: change first arg to SECMODE_NO_ACCESS
@@ -28,7 +28,7 @@ err_t BLETis::begin() {
 
     _tz.setUuid(UUID_CHR_TIMEZONE);
     _tz.setProperties(CHR_PROPS_WRITE | CHR_PROPS_READ);
-    _tz.setWriteCallback(BLETis::bletis_tz_cb, true);
+    _tz.setWriteCallback(TimeService::tz_cb, true);
 
     _tz.setPermission(SECMODE_OPEN, SECMODE_OPEN); // can read and write
     _tz.setFixedLen(1);
@@ -41,11 +41,9 @@ err_t BLETis::begin() {
     return ERROR_NONE;
 }
 
-void BLETis::bletis_time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                            uint8_t *data, uint16_t len) {
-    // BLETis &svc = (BLETis &)chr->parentService(); // only need this if you
-    // need to access a var inside the class
-    uint32_t time;
+void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+                          uint8_t *data, uint16_t len) {
+    uint64_t time;
     if (len != sizeof(time)) {
 #ifdef DEBUG
         Serial.println("ERROR: time received size is wrong");
@@ -53,15 +51,18 @@ void BLETis::bletis_time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
         return;
     }
     memcpy(&time, data, len);
-    // TODO: save the time to the rtc
-
 #ifdef DEBUG
     Serial.printf("STATUS: Unix Time Received > \"%x\"\n", time);
 #endif
+    clock.setTime(time); // save the time to the rtc
+
+    // TODO: conditional on set time?
+    TimeService &svc = (TimeService &)chr->parentService();
+    svc._time.write(&time, sizeof(time)); // echo back
 }
 
-void BLETis::bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                          uint8_t *data, uint16_t len) {
+void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+                        uint8_t *data, uint16_t len) {
     int8_t tz;
     if (len != sizeof(tz)) {
 #ifdef DEBUG
@@ -72,7 +73,7 @@ void BLETis::bletis_tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     memcpy(&tz, data, len);
     // TODO: save the tz to something
 
-    BLETis &svc = (BLETis &)chr->parentService();
+    TimeService &svc = (TimeService &)chr->parentService();
     svc._tz.write8(tz + 1); // TODO: remove
 
 #ifdef DEBUG

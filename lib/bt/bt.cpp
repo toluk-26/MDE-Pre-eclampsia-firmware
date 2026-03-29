@@ -5,7 +5,6 @@
  */
 
 #include "bt.hpp"
-#include "bletis.hpp"
 
 void BleManager::begin() {
     this->configBleHardware(); // configure BLE
@@ -14,7 +13,7 @@ void BleManager::begin() {
     _battery.begin();          // Battery Service
     _battery.write(255);       // TODO: implement and remove
 
-    // bletis.begin(); // Start Time Service
+    timeService.begin(); // Start Clock Service
 
     // Set up and start advertising
     this->startAdvertising();
