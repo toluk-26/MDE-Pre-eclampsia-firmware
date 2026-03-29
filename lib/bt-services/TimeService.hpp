@@ -30,7 +30,9 @@ class TimeService : public BLEService {
     BLECharacteristic _tz;
 
     /**
-     * @brief time callback function
+     * @brief time callback function you can trigger a read without writing by
+     * writing any amount not 8 bytes. this may be changed so that there is not
+     * point to read
      */
     static void time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                         uint8_t *data, uint16_t len);

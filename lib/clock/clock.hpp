@@ -35,6 +35,21 @@ class Clock {
     void setTime(uint64_t time);
 
     /**
+     * @brief get the timezone. NOTE: must determine whether tz will be saved to
+     * flash or nah. i advocate for nah
+     * @return unix time
+     */
+    int8_t getTz();
+
+    /**
+     * @brief set the timezone NOTE: must determine whether tz will be saved to
+     * flash or nah. i advocate for nah
+     * @param tz the tz
+     * @return successfully set time
+     */
+    void setTz(int8_t tz);
+
+    /**
      * @brief set interrupt for time
      * @param time time of alarm
      * @return successfully set alarm
@@ -55,7 +70,7 @@ class Clock {
     uint64_t _time = 1767243600;
 
     /// @brief timezone
-    uint8_t _tz;
+    int8_t _tz = 0;
 
     bool a, s;
 

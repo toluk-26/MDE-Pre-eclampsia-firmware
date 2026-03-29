@@ -18,36 +18,39 @@ err_t TimeService::begin() {
     _time.setProperties(CHR_PROPS_WRITE | CHR_PROPS_READ);
     _time.setWriteCallback(TimeService::time_cb, true);
 
-    _time.setPermission(
-        SECMODE_OPEN, // TODO: change first arg to SECMODE_NO_ACCESS
-        SECMODE_OPEN);
-    _time.setFixedLen(4);
+    _time.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+    _time.setFixedLen(sizeof(uint64_t));
     _time.setUserDescriptor("TIME"); // TODO: Remove
 
     VERIFY_STATUS(_time.begin());
+    uint64_t currentTime = clock.getTime();
+    _time.write(&currentTime, sizeof(uint64_t));
 
     _tz.setUuid(UUID_CHR_TIMEZONE);
     _tz.setProperties(CHR_PROPS_WRITE | CHR_PROPS_READ);
     _tz.setWriteCallback(TimeService::tz_cb, true);
 
     _tz.setPermission(SECMODE_OPEN, SECMODE_OPEN); // can read and write
-    _tz.setFixedLen(1);
+    _tz.setFixedLen(sizeof(uint8_t));
     _tz.setUserDescriptor("TZ"); // TODO: Remove
 
     VERIFY_STATUS(_tz.begin());
 
-    _tz.write8(0); // TODO: replace with saved timezone
+    _tz.write8(clock.getTz());
 
     return ERROR_NONE;
 }
 
 void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                           uint8_t *data, uint16_t len) {
-    uint64_t time;
-    if (len != sizeof(time)) {
+    TimeService &svc = (TimeService &)chr->parentService();
+    uint64_t time,currentTime;
+     if (len != sizeof(time)) {
 #ifdef DEBUG
         Serial.println("ERROR: time received size is wrong");
 #endif
+        currentTime = clock.getTime();
+        svc._time.write(&currentTime, sizeof(uint64_t)); // echo back
         return;
     }
     memcpy(&time, data, len);
@@ -57,8 +60,8 @@ void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     clock.setTime(time); // save the time to the rtc
 
     // TODO: conditional on set time?
-    TimeService &svc = (TimeService &)chr->parentService();
-    svc._time.write(&time, sizeof(time)); // echo back
+    currentTime = clock.getTime();
+    svc._time.write(&currentTime, sizeof(uint64_t)); // echo back
 }
 
 void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
@@ -71,10 +74,10 @@ void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
         return;
     }
     memcpy(&tz, data, len);
-    // TODO: save the tz to something
+    clock.setTz(tz);
 
     TimeService &svc = (TimeService &)chr->parentService();
-    svc._tz.write8(tz + 1); // TODO: remove
+    svc._tz.write8(clock.getTz());
 
 #ifdef DEBUG
     Serial.printf("STATUS: Timezone Received > \"%d\"\n", tz);

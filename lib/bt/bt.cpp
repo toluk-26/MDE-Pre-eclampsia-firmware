@@ -14,6 +14,7 @@ void BleManager::begin() {
     _battery.write(255);       // TODO: implement and remove
 
     timeService.begin(); // Start Clock Service
+    configService.begin();
 
     // Set up and start advertising
     this->startAdvertising();

@@ -9,6 +9,7 @@
 #include <bluefruit.h>
 
 #include "TimeService.hpp"
+#include <ConfigService.hpp>
 
 class BleManager {
   public:
@@ -42,4 +43,5 @@ class BleManager {
     BLEBas _battery; // battery info
     // TODO: add services here
     TimeService timeService;
+    ConfigService configService;
 };

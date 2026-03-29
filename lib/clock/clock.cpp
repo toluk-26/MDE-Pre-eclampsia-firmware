@@ -67,8 +67,7 @@ Clock::Clock() {
     NVIC_SetPriority(RTC2_IRQn, 6);
     NVIC_EnableIRQ(RTC2_IRQn);
 
-
-    // begin 
+    // begin
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_START);
 }
 
@@ -102,6 +101,7 @@ uint64_t Clock::getTime() {
 }
 
 void Clock::setTime(uint64_t time) {
+    // TODO: idk what the nrf code does. we will need to redo the alarm
     _time = time;
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
 #ifdef DEBUG
@@ -109,6 +109,16 @@ void Clock::setTime(uint64_t time) {
     print64(time);
     Serial.print("\n");
 #endif
+}
+
+int8_t Clock::getTz() {
+    // TODO: get tz from the flash and save it to ram
+    return _tz;
+}
+
+void Clock::setTz(int8_t tz) {
+    // TODO: finalize tz plan
+    _tz = tz;
 }
 
 bool Clock::setAlarm(uint64_t time) {
