@@ -26,7 +26,7 @@ err_t CalibrateService::begin() {
 void CalibrateService::sendData(const std::vector<uint8_t> &data) {
     _stream.notify(data.data(), data.size());
 #ifdef DEBUG
-    for (uint i = 0; i < data.size(); i++) {
+    for (size_t i = 0; i < data.size(); i++) {
         Serial.printf("%02X ", data[i]);
     }
     Serial.printf("STATUS: size %d\n", data.size());
