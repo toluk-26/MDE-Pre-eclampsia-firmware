@@ -8,29 +8,48 @@
 #pragma once
 #include <bluefruit.h>
 
-class PESBt {
+#include "TimeService.hpp"
+#include "ConfigService.hpp"
+#include "TransferService.hpp"
+#include "CalibrateService.hpp"
+
+class BleManager {
   public:
     /// @brief initialize ble and services
-    void init();
+    void begin();
 
     /// @brief turn off ble
-    void disconnect();
+    void stop();
 
-  protected:
+    /// @brief needs to be public for the controller
+    TransferService transferService;
+    CalibrateService calibrateService;
+
+  private:
     /// @brief what to do on disconnect from phone
-    static void disconnect_callback(uint16_t conn_handle, uint8_t reason);
+    static void onDisconnect(uint16_t conn_handle, uint8_t reason);
 
     /// @brief what to do on connect to phone
-    static void connect_callback(uint16_t conn_handle);
+    static void onConnect(uint16_t conn_handle);
 
     /// @brief uhh start advertising
-    static void startAdv();
+    static void startAdvertising();
 
     /// @brief ble device info service
-    void dev_info_config();
+    void configDeviceInfo();
 
     /**
      * @brief configure the ble device for broadcasting
      */
-    void ble_config();
+    void configBleHardware();
+
+    // BLE Services
+    BLEDfu _dfu;     // OTA DFU service
+    BLEDis _devInfo; // device information
+    BLEBas _battery; // battery info
+    // TODO: add services here
+    TimeService timeService;
+    ConfigService configService;
 };
+
+extern BleManager bt;
