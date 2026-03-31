@@ -105,10 +105,22 @@ bool FlashLog::read(uint32_t addr, DataHdr &header,
     return true;
 }
 
-bool FlashLog::findTail() {
-    uint32_t start = millis();
-    _qFlash.waitUntilReady();
-    uint32_t end = millis();
+bool FlashLog::getConfig() {
+    if (!this->_flashOk) {
+#ifdef DEBUG
+        Serial.println("ERROR: tried to write config. flash is not okay");
+#endif
+        return false;
+    }
+    ConfigLoad c;
+    _qFlash.readBuffer(0, (uint8_t *)&c, sizeof(configload));
+
+    // check config load from flash
+    // TODO:
+}
+
+bool FlashLog::_findTail() {
+    uint32_t addr = LOG_OFFSET;
 
     LOGV("It took %d for flash to be ready", (end - start));
 
