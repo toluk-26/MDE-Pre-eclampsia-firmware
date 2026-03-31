@@ -2,18 +2,18 @@
  * @file ConfigService.hpp
  * @author Tolu Kolade
  * @brief
- * @date March 3, 2026
+ * @date March 29, 2026
  */
 
 #include <BLECharacteristic.h>
 #include <BLEService.h>
 
-#define UUID_CONFIG_SERVICE "043f0000-7bdb-4430-a1b9-e7d26fb2b981"
-#define UUID_CHR_PID "043f0000-7bdb-4430-a1b9-e7d26fb2b981"
-#define UUID_CHR_DIASTOLIC"043f0000-7bdb-4430-a1b9-e7d26fb2b981"
-#define UUID_CHR_SYSTOLIC "043f0000-7bdb-4430-a1b9-e7d26fb2b981"
-#define UUID_CHR_NEW_PATIENT "043f0000-7bdb-4430-a1b9-e7d26fb2b981"
-#define UUID_CHR_DEMO_MODE "043f0000-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CONFIG_SERVICE "32610000-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_PID "32610001-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_DIASTOLIC "32610002-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_SYSTOLIC "32610003-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_NEW_PATIENT "32610004-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_DEMO_MODE "32610005-7bdb-4430-a1b9-e7d26fb2b981"
 
 class ConfigService : public BLEService {
   public:

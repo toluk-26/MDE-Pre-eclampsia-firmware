@@ -6,6 +6,8 @@
 
 #include "bt.hpp"
 
+BleManager bt;
+
 void BleManager::begin() {
     this->configBleHardware(); // configure BLE
     _dfu.begin();              // start DFU service
@@ -13,8 +15,9 @@ void BleManager::begin() {
     _battery.begin();          // Battery Service
     _battery.write(255);       // TODO: implement and remove
 
-    timeService.begin(); // Start Clock Service
+    timeService.begin(); // Start RTC Service
     configService.begin();
+    transferService.begin();
 
     // Set up and start advertising
     this->startAdvertising();

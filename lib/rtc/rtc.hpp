@@ -14,9 +14,9 @@
 #define PRESCALER_C 4095 // Max value is 4095
 
 /// @brief functions to manipulate time and interrupts
-class Clock {
+class RTC {
   public:
-    Clock();
+    RTC();
 
     bool tick();
 
@@ -82,7 +82,7 @@ class Clock {
     uint64_t convertCounter(uint32_t counter);
 };
 
-extern Clock clock;
+extern RTC rtc;
 
 #ifdef DEBUG
 /**

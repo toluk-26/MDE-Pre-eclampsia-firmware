@@ -9,7 +9,8 @@
 #include <bluefruit.h>
 
 #include "TimeService.hpp"
-#include <ConfigService.hpp>
+#include "ConfigService.hpp"
+#include "TransferService.hpp"
 
 class BleManager {
   public:
@@ -18,6 +19,9 @@ class BleManager {
 
     /// @brief turn off ble
     void stop();
+
+    /// @brief needs to be public for the controller
+    TransferService transferService;
 
   private:
     /// @brief what to do on disconnect from phone
@@ -45,3 +49,5 @@ class BleManager {
     TimeService timeService;
     ConfigService configService;
 };
+
+extern BleManager bt;

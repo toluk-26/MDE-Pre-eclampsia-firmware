@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <Arduino.h>
 #include <cstdint>
 
 /**
@@ -15,7 +16,7 @@
  * @param code debug code. the hope is that there is a file for it with defines
  * @return whether the append was successful or nah
  */
-bool LOG_DEBUG(const uint8_t code);
+bool LOG_DEBUG(const String code);
 
 /**
  * @brief wrapper to append sensor data to the log section of external

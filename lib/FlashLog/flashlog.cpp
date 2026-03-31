@@ -7,11 +7,13 @@
  */
 
 #include "flashlog.hpp"
+#include "rtc.hpp"
 
 FlashLog::FlashLog()
     : _SPI_2(NRF_SPIM0, PIN_QSPI_IO1, PIN_QSPI_SCK, PIN_QSPI_IO0),
-      _QFlashTransport(PIN_QSPI_CS, _SPI_2), _qFlash(&_QFlashTransport) {
+      _QFlashTransport(PIN_QSPI_CS, _SPI_2), _qFlash(&_QFlashTransport) {}
 
+void FlashLog::begin() {
     // init memory
     if (!_qFlash.begin(&p25q16h, 1)) {
 #ifdef DEBUG
@@ -19,13 +21,13 @@ FlashLog::FlashLog()
 #endif
         return; // TODO: change to return, go to low power, set error status
     }
-#ifdef DEBUG
-    Serial.println("STATUS: QSPI flash chip initialized");
-    printInfo();
-#endif
-
     _flashOk = true;
     _flashSize = _qFlash.size();
+    
+
+#ifdef DEBUG
+    Serial.println("STATUS: QSPI flash chip initialized");
+#endif
 
     // test memory
     // check metadata or create
@@ -33,11 +35,16 @@ FlashLog::FlashLog()
 #ifdef DEBUG
     Serial.println("STATUS: no addr in meta. writing");
 #endif
-    this->_findTail();
+    
 
     // check and load config or create basic
 
     // confirm end ptr
+    findTail();
+
+#ifdef DEBUG
+    printInfo();
+#endif
 }
 
 bool FlashLog::append(uint8_t type, const std::vector<uint8_t> &payload) {
@@ -53,29 +60,37 @@ bool FlashLog::append(uint8_t type, const std::vector<uint8_t> &payload) {
 #endif
         return false;
     }
-    while (_qFlash.isBusy() && millis() < 100) {
-        ;
-    }
-    //     if (QFlash.isBusy()) {
-    // #ifdef DEBUG
-    //         Serial.println("ERROR: tried to append. flash timed out");
-    // #endif
-    //         return false;
-    //     }
+//     uint32_t waitStart = millis();
+//     while (_qFlash.isBusy() && (millis() - waitStart) < 100) {
+//         delay(1); // Yield to prevent watchdog resets
+//     }
+//     if (_qFlash.isBusy()) {
+// #ifdef DEBUG
+//         Serial.println("ERROR: tried to append. flash timed out");
+// #endif
+//         return false;
+//     }
 
     // ok. can continue
 
-    uint32_t time = this->_logTailAddr; // TODO: get from rtc
-    DataHdr h{type, (uint16_t)payload.size(), time};
+    uint64_t time = rtc.getTime();
+    DataHdr h{type, (uint32_t)payload.size(), time};
 #ifdef DEBUG
     Serial.printf("STATUS: writing to address 0x%06x\n", _logTailAddr);
 #endif
     _qFlash.writeBuffer(_logTailAddr, (uint8_t *)&h, sizeof(h)); // write header
+
+    // waitStart = millis();
+    // while (_qFlash.isBusy() && (millis() - waitStart) < 100) {
+    //     delay(1);
+    // }
+
+
     uint32_t payloadAddr = _logTailAddr + sizeof(h);
 #ifdef DEBUG
     Serial.printf("STATUS: writing to address 0x%06lX\n", payloadAddr);
 #endif
-    _qFlash.writeBuffer(payloadAddr, (uint8_t *)payload.data(),
+    _qFlash.writeBuffer(payloadAddr, payload.data(),
                         payload.size()); // write payload
 
     // update tailAddr
@@ -87,30 +102,66 @@ bool FlashLog::append(uint8_t type, const std::vector<uint8_t> &payload) {
     return true;
 }
 
-bool FlashLog::_findTail() {
-    uint32_t addr = LOG_OFFSET;
+bool FlashLog::read(uint32_t addr, DataHdr &header,
+                    std::vector<uint8_t> &payload) {
+    if (addr >= _logTailAddr) return false;
 
-    while (addr + sizeof(DataHdr) <= _flashSize) {
+    // TODO: wait until qflash is ready
+
+    _qFlash.readBuffer(addr, (uint8_t *)&header, sizeof(header));
+    uint32_t payloadAddr = addr + sizeof(header);
+    payload.resize(header.len);
+    _qFlash.readBuffer(payloadAddr, payload.data(), header.len);
+
+    if (header.len != payload.size()) {
+#ifdef DEBUG
+        Serial.println("ERROR: header length does not match payload size");
+#endif
+        return false;
+    }
+#ifdef DEBUG
+Serial.printf("STATUS: Reading Addr: %x\n", addr);
+    printEntry(header, payload);
+#endif
+
+    return true;
+}
+
+bool FlashLog::findTail() {
+    uint32_t start = millis();
+    _qFlash.waitUntilReady();
+    uint32_t end = millis();
+
+#ifdef DEBUG
+    Serial.printf("STATUS: It took %d for flash to be ready\n", (end - start));
+#endif
+
+    uint32_t addr = LOG_OFFSET;
+    uint32_t FlashSize = _flashSize * 1024;
+
+    while (addr + sizeof(DataHdr) <= FlashSize) {
         DataHdr h;
         _qFlash.readBuffer(addr, (uint8_t *)&h, sizeof(h));
 
-        // check if header is empty
-        const uint8_t *p = (const uint8_t *)&h;
-        for (size_t i = 0; i < sizeof(DataHdr); i++) {
-            if (p[i] == 0xFF) {
+        if (h.type == 0xFF && h.len == 0xFFFFFFFF) {
 #ifdef DEBUG
-                Serial.printf("STATUS: Found End Addr > %08X\n", addr);
+            Serial.printf("STATUS: Found End Addr > %08X\n", addr);
 #endif
-                this->_logTailAddr = addr;
-                return true;
-            }
+            _logTailAddr = addr;
+            return true;
         }
 
-        // addr isnt a tail. continue to the next block
-#ifdef DEBUG_FLASH
-        Serial.printf("STATUS: Header {\t%d, \t%d,\t%d }\n", h.type, h.len,
-                      h.ts);
+        // Prevent infinite loops or wild jumps if data is corrupted
+        if (h.len == 0xFFFFFFFF ||
+            (addr + sizeof(DataHdr) + h.len > FlashSize)) {
+#ifdef DEBUG
+            Serial.printf("ERROR: Corrupt log or out of bounds at addr %08X. "
+                          "Length: %u\n",
+                          addr, h.len);
 #endif
+            _logTailAddr = addr; // Tail is wherever the corruption started
+            return false;
+        }
 
         addr += sizeof(DataHdr) + h.len;
     }
@@ -131,13 +182,14 @@ void FlashLog::cleanConfig() {
 void FlashLog::cleanLogs() {
     const uint logSize = _logTailAddr - LOG_OFFSET;
     const uint numOfLogSectors = logSize / SECTOR_SIZE + 16;
-    if (numOfLogSectors < 32){
+    if (numOfLogSectors < 32) {
 #ifdef DEBUG
-        Serial.printf("STATUS: erasing small log of %u sectors\n", numOfLogSectors - 16);
+        Serial.printf("STATUS: erasing small log of %u sectors\n",
+                      numOfLogSectors - 16);
 #endif
         for (uint i = 16; i <= numOfLogSectors; i++)
-            _qFlash.erasePage(i);}
-    else {
+            _qFlash.erasePage(i);
+    } else {
 #ifdef DEBUG
         Serial.println("STATUS: erasing large log");
 #endif
@@ -191,11 +243,31 @@ void FlashLog::printConfig() {
     Serial.printf("PID:\t%u\n", c.pid);
 
     Serial.println("Threshold Values");
-    Serial.printf("\tDiastolic:\t%u\n", c.thres_dia);
-    Serial.printf("\tSystolic:\t%u\n", c.thres_sys);
+    Serial.printf("\tHigh:\t%u/%u\n", c.systolic_max, c.diastolic_max);
+    Serial.printf("\tLow:\t%u/%u\n", c.systolic_min, c.diastolic_min);
+
+    Serial.println("Coefficient Values");
+    Serial.printf("\tSystolic:\tS = %u * x + %u\n", c.systolic_coeff_m,
+                  c.systolic_coeff_b);
+    Serial.printf("\tDiastolic:\tD = %u * x + %u\n", c.diastolic_coeff_m,
+                  c.diastolic_coeff_b);
 }
 
-void FlashLog::printData() {}
+void FlashLog::printEntry(const DataHdr &h,
+                          const std::vector<uint8_t> &payload) {
+    printHeader(h);
+    printData(payload);
+}
+
+void FlashLog::printHeader(const DataHdr &h) {
+    Serial.printf("\tHeader > {\t%d, \t%d,\t%d }\n", h.type, h.len, h.ts);
+}
+
+void FlashLog::printData(const std::vector<uint8_t> &payload) {
+    Serial.printf("\tPayload > \"");
+    Serial.write(payload.data(), payload.size());
+    Serial.printf("\"\n");
+}
 
 #endif
 

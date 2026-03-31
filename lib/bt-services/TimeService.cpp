@@ -6,7 +6,7 @@
  */
 
 #include "TimeService.hpp"
-#include "clock.hpp"
+#include "rtc.hpp"
 
 TimeService::TimeService() : BLEService(UUID_TIME_SERVICE) {}
 
@@ -23,7 +23,7 @@ err_t TimeService::begin() {
     _time.setUserDescriptor("TIME"); // TODO: Remove
 
     VERIFY_STATUS(_time.begin());
-    uint64_t currentTime = clock.getTime();
+    uint64_t currentTime = rtc.getTime();
     _time.write(&currentTime, sizeof(uint64_t));
 
     _tz.setUuid(UUID_CHR_TIMEZONE);
@@ -36,7 +36,7 @@ err_t TimeService::begin() {
 
     VERIFY_STATUS(_tz.begin());
 
-    _tz.write8(clock.getTz());
+    _tz.write8(rtc.getTz());
 
     return ERROR_NONE;
 }
@@ -44,12 +44,12 @@ err_t TimeService::begin() {
 void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                           uint8_t *data, uint16_t len) {
     TimeService &svc = (TimeService &)chr->parentService();
-    uint64_t time,currentTime;
-     if (len != sizeof(time)) {
+    uint64_t time, currentTime;
+    if (len != sizeof(time)) {
 #ifdef DEBUG
         Serial.println("ERROR: time received size is wrong");
 #endif
-        currentTime = clock.getTime();
+        currentTime = rtc.getTime();
         svc._time.write(&currentTime, sizeof(uint64_t)); // echo back
         return;
     }
@@ -57,10 +57,10 @@ void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
 #ifdef DEBUG
     Serial.printf("STATUS: Unix Time Received > \"%x\"\n", time);
 #endif
-    clock.setTime(time); // save the time to the rtc
+    rtc.setTime(time); // save the time to the rtc
 
     // TODO: conditional on set time?
-    currentTime = clock.getTime();
+    currentTime = rtc.getTime();
     svc._time.write(&currentTime, sizeof(uint64_t)); // echo back
 }
 
@@ -74,10 +74,10 @@ void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
         return;
     }
     memcpy(&tz, data, len);
-    clock.setTz(tz);
+    rtc.setTz(tz);
 
     TimeService &svc = (TimeService &)chr->parentService();
-    svc._tz.write8(clock.getTz());
+    svc._tz.write8(rtc.getTz());
 
 #ifdef DEBUG
     Serial.printf("STATUS: Timezone Received > \"%d\"\n", tz);

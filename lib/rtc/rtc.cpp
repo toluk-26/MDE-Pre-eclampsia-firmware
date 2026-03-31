@@ -9,7 +9,7 @@
  * @todo check if snooze works
  */
 
-#include "clock.hpp"
+#include "rtc.hpp"
 #include <Arduino.h>
 #include <nrf_rtc.h>
 
@@ -17,7 +17,7 @@
 #include <inttypes.h>
 #endif
 
-Clock clock; // all rtc clock. call clock.tick() as much as possible
+RTC rtc; // all rtc clock. call clock.tick() as much as possible
 
 static volatile bool alarmFlag = false;    // if the alarm interrupt
 static volatile bool snoozeFlag = false;   // if the snooze interrupt
@@ -45,7 +45,7 @@ extern "C" void RTC2_IRQHandler(void) {
     __ISB();
 }
 
-Clock::Clock() {
+RTC::RTC() {
     // prep
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_STOP);  // stop rtc
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR); // clear
@@ -71,7 +71,7 @@ Clock::Clock() {
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_START);
 }
 
-bool Clock::tick() {
+bool RTC::tick() {
     // check if anything happened
     if (!(alarmFlag || snoozeFlag || overflowFlag)) return false;
 
@@ -96,11 +96,11 @@ bool Clock::tick() {
     return true;
 }
 
-uint64_t Clock::getTime() {
+uint64_t RTC::getTime() {
     return _time + convertCounter(nrf_rtc_counter_get(NRF_RTC2));
 }
 
-void Clock::setTime(uint64_t time) {
+void RTC::setTime(uint64_t time) {
     // TODO: idk what the nrf code does. we will need to redo the alarm
     _time = time;
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
@@ -111,17 +111,17 @@ void Clock::setTime(uint64_t time) {
 #endif
 }
 
-int8_t Clock::getTz() {
+int8_t RTC::getTz() {
     // TODO: get tz from the flash and save it to ram
     return _tz;
 }
 
-void Clock::setTz(int8_t tz) {
+void RTC::setTz(int8_t tz) {
     // TODO: finalize tz plan
     _tz = tz;
 }
 
-bool Clock::setAlarm(uint64_t time) {
+bool RTC::setAlarm(uint64_t time) {
     if (time < _time) {
 #ifdef DEBUG
         Serial.println("ERROR: alarm input time is smaller than base time. "
@@ -154,7 +154,7 @@ bool Clock::setAlarm(uint64_t time) {
     return true;
 }
 
-uint64_t Clock::convertCounter(uint32_t counter) {
+uint64_t RTC::convertCounter(uint32_t counter) {
     return counter / PRESCALAR_FACTOR;
 }
 

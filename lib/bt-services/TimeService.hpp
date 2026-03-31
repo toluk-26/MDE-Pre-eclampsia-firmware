@@ -11,9 +11,9 @@
 #include "BLEService.h"
 #include "bluefruit.h"
 
-#define UUID_TIME_SERVICE "043f0000-0ff5-45d1-9502-db9d40757da2"
-#define UUID_CHR_TIME "043f0001-0ff5-45d1-9502-db9d40757da2"
-#define UUID_CHR_TIMEZONE "043f0002-0ff5-45d1-9502-db9d40757da2"
+#define UUID_TIME_SERVICE "043f0000-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_TIME "043f0001-7bdb-4430-a1b9-e7d26fb2b981"
+#define UUID_CHR_TIMEZONE "043f0002-7bdb-4430-a1b9-e7d26fb2b981"
 
 /**
  * @brief Time BLE Service. will update RTC time from phone app
