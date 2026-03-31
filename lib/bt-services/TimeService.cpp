@@ -6,6 +6,7 @@
  */
 
 #include "TimeService.hpp"
+#include "log.hpp"
 #include "rtc.hpp"
 
 TimeService::TimeService() : BLEService(UUID_TIME_SERVICE) {}
@@ -46,18 +47,15 @@ void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     TimeService &svc = (TimeService &)chr->parentService();
     uint64_t time, currentTime;
     if (len != sizeof(time)) {
-#ifdef DEBUG
-        Serial.println("ERROR: time received size is wrong");
-#endif
+        LOGE("Time received size is wrong. size received: %u", len);
         currentTime = rtc.getTime();
         svc._time.write(&currentTime, sizeof(uint64_t)); // echo back
         return;
     }
     memcpy(&time, data, len);
-#ifdef DEBUG
-    Serial.printf("STATUS: Unix Time Received > \"%x\"\n", time);
-#endif
     rtc.setTime(time); // save the time to the rtc
+    LOGV("Unix Time Received: %d%d", static_cast<uint32_t>(time >> 32),
+         static_cast<uint32_t>(time));
 
     // TODO: conditional on set time?
     currentTime = rtc.getTime();
@@ -68,9 +66,7 @@ void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                         uint8_t *data, uint16_t len) {
     int8_t tz;
     if (len != sizeof(tz)) {
-#ifdef DEBUG
-        Serial.println("ERROR: time received size is wrong");
-#endif
+        LOGE("Timezone received size is wrong. size received: %u", len);
         return;
     }
     memcpy(&tz, data, len);
@@ -79,7 +75,5 @@ void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     TimeService &svc = (TimeService &)chr->parentService();
     svc._tz.write8(rtc.getTz());
 
-#ifdef DEBUG
-    Serial.printf("STATUS: Timezone Received > \"%d\"\n", tz);
-#endif
+    LOGV("Timezone Received: %d", tz);
 }

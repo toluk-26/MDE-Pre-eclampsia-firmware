@@ -5,6 +5,7 @@
  */
 
 #include "bt.hpp"
+#include "log.hpp"
 
 BleManager bt;
 
@@ -32,7 +33,7 @@ void BleManager::stop() {
     }
     Bluefruit.Advertising.stop();
     Bluefruit.autoConnLed(false);
-    Serial.println("STATUS: Disconnected bluetooth service");
+    LOGV("Disconnected bluetooth service");
 }
 
 void BleManager::startAdvertising(void) {
@@ -60,7 +61,7 @@ void BleManager::startAdvertising(void) {
     Bluefruit.Advertising.start(
         0); // 0 = Don't stop advertising after n seconds
 
-    Serial.println("STATUS: advertising...");
+    LOGV("advertising...");
 }
 
 // callback invoked when central connects
@@ -71,7 +72,7 @@ void BleManager::onConnect(uint16_t conn_handle) {
     char central_name[32] = {0};
     connection->getPeerName(central_name, sizeof(central_name));
 
-    Serial.printf("STATUS: Connected to %s\n", central_name);
+    LOGV("Connected to %s", central_name);
 }
 
 /**
@@ -83,8 +84,7 @@ void BleManager::onDisconnect(uint16_t conn_handle, uint8_t reason) {
     (void)conn_handle;
     (void)reason;
 
-    Serial.print("STATUS: Disconnected, reason = 0x");
-    Serial.println(reason, HEX);
+    LOGV("Disconnected, reason = 0x%X", reason);
 }
 
 void BleManager::configBleHardware() {

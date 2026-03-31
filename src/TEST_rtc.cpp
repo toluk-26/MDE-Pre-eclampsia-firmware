@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "time.hpp"
+#include "rtc.hpp"
 #include <inttypes.h>
 #include <nrf_rtc.h>
 

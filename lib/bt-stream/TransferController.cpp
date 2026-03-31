@@ -1,9 +1,11 @@
 #include "TransferController.hpp"
+#include "log.hpp"
 
 void TransferController::begin() {
     _done = false;
     _currAddr = LOG_O;
     _numofEntries = 0;
+    LOGV3("Begin Reading");
 }
 
 void TransferController::run() {
@@ -13,9 +15,7 @@ void TransferController::run() {
 
     // get data
     if (!mem.read(_currAddr, header, payload)) {
-#ifdef DEBUG
-        Serial.println("STATUS: Finished Reading");
-#endif
+        LOGV3("Finished Reading");
         _done = true;
         bt.transferService.transfer_flag = false;
         bt.transferService.sendSize(_numofEntries);

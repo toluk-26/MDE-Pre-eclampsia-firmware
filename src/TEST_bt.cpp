@@ -5,21 +5,20 @@
  * @date December 23, 2025
  */
 
+#include "StreamController.hpp"
 #include "TransferController.hpp"
 #include "bt.hpp"
 #include "flashlog.hpp"
+#include "log.hpp"
 #include "rtc.hpp"
 #include <Arduino.h>
-#include "StreamController.hpp"
 
-#ifndef DEBUG
-#error "you seem to be in the wrong env"
-#endif
-#include <append.hpp>
+// #ifndef DEBUG
+// #error "you seem to be in the wrong env"
+// #endif
 
 TransferController tcrtl;
 StreamController sctrl;
-
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
@@ -38,35 +37,36 @@ void setup() {
 
     // mem.cleanLogs();
     // delay(500);
-    // LOG_SENSOR(91, 90, 120, 0);
-    // LOG_DEBUG("TEST0");
-    // LOG_SENSOR(92, 92, 123, 0);
-    // LOG_SENSOR(93, 90, 120, 0);
+    // Log::sensor(91, 90, 120, 0);
+    // LOGS("TEST0");
+    // Log::sensor(92, 92, 123, 0);
+    // Log::sensor(93, 90, 120, 0);
     // delay(1000);
-    // LOG_SENSOR(94, 92, 123, 0);
-    // LOG_SENSOR(91, 90, 120, 0);
-    // LOG_DEBUG("TEST1");
-    // LOG_DEBUG("TEST2");
-    // LOG_SENSOR(92, 92, 123, 0);
-    // LOG_SENSOR(93, 90, 120, 0);
+    // Log::sensor(94, 92, 123, 0);
+    // Log::sensor(91, 90, 120, 0);
+    // LOGS("TEST1");
+    // LOGS("TEST2");
+    // Log::sensor(92, 92, 123, 0);
+    // Log::sensor(93, 90, 120, 0);
     // delay(1000);
-    // LOG_SENSOR(94, 92, 123, 0);
-    // LOG_SENSOR(91, 90, 120, 0);
-    // LOG_SENSOR(92, 92, 123, 0);
-    // LOG_SENSOR(93, 90, 120, 0);
+    // Log::sensor(94, 92, 123, 0);
+    // Log::sensor(91, 90, 120, 0);
+    // Log::sensor(92, 92, 123, 0);
+    // Log::sensor(93, 90, 120, 0);
     // delay(1000);
-    // LOG_DEBUG("TEST3");
-    // LOG_SENSOR(94, 92, 123, 0);
-    // LOG_SENSOR(91, 90, 120, 0);
-    // LOG_SENSOR(92, 92, 123, 0);
+    // LOGS("TEST3");
+    // Log::sensor(94, 92, 123, 0);
+    // Log::sensor(91, 90, 120, 0);
+    // Log::sensor(92, 92, 123, 0);
     // delay(1000);
-    // LOG_DEBUG("TEST4");
-    // LOG_SENSOR(93, 90, 120, 0);
+    // LOGS("TEST4");
+    // Log::sensor(93, 90, 120, 0);
     // delay(1000);
-    // LOG_SENSOR(94, 92, 123, 0);
-    // LOG_DEBUG("TEST5");
+    // Log::sensor(94, 92, 123, 0);
+    // LOGS("TEST5");
     // delay(2000);
-    // LOG_DEBUG("TEST6");
+    // LOGS("TEST6");
+    LOGV("Done");
 }
 
 void loop() {
@@ -80,7 +80,5 @@ void loop() {
         tcrtl.run();
     }
 
-    if(bt.calibrateService.stream_flag)
-        sctrl.run();
-
+    if (bt.calibrateService.stream_flag) sctrl.run();
 }

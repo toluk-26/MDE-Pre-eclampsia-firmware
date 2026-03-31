@@ -1,4 +1,5 @@
 #include "CalibrateService.hpp"
+#include "log.hpp"
 
 err_t CalibrateService::begin() {
     VERIFY_STATUS(BLEService::begin());
@@ -26,32 +27,27 @@ err_t CalibrateService::begin() {
 void CalibrateService::sendData(const std::vector<uint8_t> &data) {
     _stream.notify(data.data(), data.size());
 #ifdef DEBUG
+    String msg;
     for (uint i = 0; i < data.size(); i++) {
-        Serial.printf("%02X ", data[i]);
+        msg += data[i];
     }
-    Serial.printf("STATUS: size %d\n", data.size());
+    LOGV("Sending %s, size:%d", msg, data.size());
 #endif
 }
 
 void CalibrateService::trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                   uint8_t *data, uint16_t len) {
     if (len != sizeof(uint8_t)) {
-#ifdef DEBUG
-        Serial.println("ERROR: trigger received size is wrong");
-#endif
+        LOGE("trigger received size is wrong");
         return;
     }
     CalibrateService &svc = (CalibrateService &)chr->parentService();
 
     if (svc.stream_flag) {
         svc.stream_flag = false; // disable flag
-#ifdef DEBUG
-        Serial.println("STATUS: stream trigger flag disabled!");
-#endif
+        LOGV("Stream trigger flag disabled!");
     } else {
         svc.stream_flag = true; // set flag
-#ifdef DEBUG
-        Serial.println("STATUS: stream trigger flag!");
-#endif
+        LOGV("Stream trigger flag enabled!");
     }
 }

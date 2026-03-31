@@ -10,6 +10,7 @@
  */
 
 #include "rtc.hpp"
+#include "log.hpp"
 #include <Arduino.h>
 #include <nrf_rtc.h>
 
@@ -87,9 +88,9 @@ bool RTC::tick() {
     if (o) _time += convertCounter(0x1000000); // convert to static value
 
 #ifdef DEBUG
-    if (a) Serial.println("STATUS: alarm trigger");
-    if (s) Serial.println("STATUS: snooze trigger");
-    if (o) Serial.println("STATUS: overflow trigger");
+    if (a) LOGV("alarm trigger");
+    if (s) LOGV("snooze trigger");
+    if (o) LOGV("overflow trigger");
     if (a) setAlarm(getTime() + 60);
 #endif
 
@@ -104,11 +105,8 @@ void RTC::setTime(uint64_t time) {
     // TODO: idk what the nrf code does. we will need to redo the alarm
     _time = time;
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
-#ifdef DEBUG
-    Serial.print("STATUS: base time updated to ");
-    print64(time);
-    Serial.print("\n");
-#endif
+    LOGV3("Base time updated to %d%d", static_cast<uint32_t>(time >> 32),
+          static_cast<uint32_t>(time));
 }
 
 int8_t RTC::getTz() {
@@ -123,17 +121,13 @@ void RTC::setTz(int8_t tz) {
 
 bool RTC::setAlarm(uint64_t time) {
     if (time < _time) {
-#ifdef DEBUG
-        Serial.println("ERROR: alarm input time is smaller than base time. "
-                       "rejected"); // time must be larger than base time
-#endif
+        LOGE("alarm input time is smaller than base time. "
+             "rejected"); // time must be larger than base time
         return false;
     }
     if (time < getTime()) {
-#ifdef DEBUG
-        Serial.println("ERROR: alarm input time is smaller than current time. "
-                       "rejected"); // time must be larger than base time
-#endif
+        LOGE("alarm input time is smaller than current time. "
+             "rejected"); // time must be larger than base time
         return false;
     }
 
@@ -144,11 +138,14 @@ bool RTC::setAlarm(uint64_t time) {
     }
 
     // find how much time in the future and convert to count
-    uint countercompare = (time - _time) * PRESCALAR_FACTOR;
+    uint64_t delta = time - _time;
+    uint countercompare = delta * PRESCALAR_FACTOR;
     nrf_rtc_cc_set(NRF_RTC2, 0, countercompare); // set cc register
 
 #ifdef DEBUG
-    Serial.printf("STATUS: alarm set for %u seconds\n", (time - getTime()));
+    delta = time - getTime();
+    LOGV3("alarm set for %u%u seconds", static_cast<uint32_t>(delta >> 32),
+          static_cast<uint32_t>(delta));
 #endif
 
     return true;

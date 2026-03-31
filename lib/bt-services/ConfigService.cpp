@@ -1,4 +1,5 @@
 #include "ConfigService.hpp"
+#include "log.hpp"
 constexpr uint16_t sizeOfThreshold = 2 * sizeof(int);
 
 err_t ConfigService::begin() {
@@ -62,19 +63,17 @@ err_t ConfigService::begin() {
 void ConfigService::pid_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                            uint8_t *data, uint16_t len) {
 #ifdef DEBUG
-    Serial.print("STATUS: PID Received > ");
+    String msg;
     for (uint16_t i = 0; i < len; i++)
-        Serial.print(data[i]);
-    Serial.println();
+        msg += (data[i]);
+    LOGV("PID %s Received");
 #endif
 
-    if (len != sizeof(int)) {
-#ifdef DEBUG
-        Serial.println("ERROR: PID received size is wrong");
-#endif
+    if (len != sizeof(uint32_t)) {
+        LOGE("PID received size is wrong. size received: %u", len);
         return;
     }
-    int pid;
+    uint32_t pid;
     memcpy(&pid, data, len);
     // TODO: save pid
 }
@@ -82,16 +81,14 @@ void ConfigService::pid_cb(uint16_t conn_hdl, BLECharacteristic *chr,
 void ConfigService::diastolic_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                  uint8_t *data, uint16_t len) {
 #ifdef DEBUG
-    Serial.print("STATUS: Diastolic Received > ");
+    String msg;
     for (uint16_t i = 0; i < len; i++)
-        Serial.print(data[i]);
-    Serial.println();
+        msg += (data[i]);
+    LOGV("Diastolic Received: %s", msg);
 #endif
 
     if (len != sizeof(sizeOfThreshold)) {
-#ifdef DEBUG
-        Serial.println("ERROR: Diastolic received size is wrong");
-#endif
+        LOGE("Diastolic received size is wrong. size received: %u", len);
         return;
     }
     int min, max;
@@ -101,16 +98,14 @@ void ConfigService::diastolic_cb(uint16_t conn_hdl, BLECharacteristic *chr,
 void ConfigService::systolic_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                 uint8_t *data, uint16_t len) {
 #ifdef DEBUG
-    Serial.print("STATUS: Systolic Received > ");
+    String msg;
     for (uint16_t i = 0; i < len; i++)
-        Serial.print(data[i]);
-    Serial.println();
+        msg += (data[i]);
+    LOGV("Systolic Received: %s", msg);
 #endif
 
     if (len != sizeof(sizeOfThreshold)) {
-#ifdef DEBUG
-        Serial.println("ERROR: Systolic received size is wrong");
-#endif
+        LOGE("Systolic received size is wrong. size received: %u", len);
         return;
     }
 
@@ -120,18 +115,10 @@ void ConfigService::systolic_cb(uint16_t conn_hdl, BLECharacteristic *chr,
 
 void ConfigService::newPatient_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                   uint8_t *data, uint16_t len) {
-#ifdef DEBUG
-    Serial.print("STATUS: New patient? Received > ");
-    for (uint16_t i = 0; i < len; i++)
-        Serial.print(data[i]);
-    Serial.println();
-#endif
-
     if (len != sizeof(bool)) {
-#ifdef DEBUG
-        Serial.println("ERROR: New Patient received size is wrong");
-#endif
+        LOGE("New Patient received size is wrong");
         return;
     }
+    LOGV("New Patient Flag!");
     // TODO: perform task then notify that task are done
 }

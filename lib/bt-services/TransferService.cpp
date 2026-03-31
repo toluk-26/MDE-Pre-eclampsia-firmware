@@ -1,4 +1,5 @@
 #include "TransferService.hpp"
+#include "log.hpp"
 #include <bluefruit.h>
 #include <vector>
 
@@ -38,22 +39,20 @@ void TransferService::sendData(const std::vector<uint8_t> &data) {
     this->_data.indicate(data.data(), data.size());
 }
 
-void TransferService::sendSize(const uint32_t &size) {
-    _size.notify32(size);
-}
+void TransferService::sendSize(const uint32_t &size) { _size.notify32(size); }
 
 void TransferService::trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                  uint8_t *data, uint16_t len) {
     if (len != sizeof(bool)) {
-#ifdef DEBUG
-        Serial.println("ERROR: trigger received size is wrong");
-#endif
+        LOGE("Trigger received size is wrongsize is wrong. size received: %u",
+             len);
+
         return;
     }
     TransferService &svc = (TransferService &)chr->parentService();
 #ifdef DEBUG
     if (svc.transfer_flag) {
-        Serial.println("VERBOSE: trigger is already triggered");
+        LOGV("trigger is already triggered");
         return;
     }
 #endif

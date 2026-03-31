@@ -16,6 +16,7 @@
 #define LOG_O 0x001000
 
 // TODO: move to a better place
+#pragma pack(push, 4)
 struct ConfigLoad {
     uint32_t pid; // patient id TODO: confirm if size is okay
     uint8_t diastolic_min;
@@ -27,6 +28,7 @@ struct ConfigLoad {
     uint8_t systolic_coeff_m; // TODO: confirm data type
     uint8_t systolic_coeff_b; // TODO: confirm data type
 };
+#pragma pop()
 
 #pragma pack(push, 1)
 struct DataHdr {
@@ -102,6 +104,8 @@ class FlashLog {
     const uint32_t BLOCK_SIZE = 0x010000;  // 64 KB
     const uint32_t CFG_OFFSET = 0x000000;  // config data block
     const uint32_t LOG_OFFSET = LOG_O;     // log block
+
+    ConfigLoad configload;
 
     SPIClass _SPI_2;
     Adafruit_FlashTransport_SPI _QFlashTransport;
