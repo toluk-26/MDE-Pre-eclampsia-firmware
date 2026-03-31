@@ -11,6 +11,7 @@
 #include "TimeService.hpp"
 #include "ConfigService.hpp"
 #include "TransferService.hpp"
+#include "CalibrateService.hpp"
 
 class BleManager {
   public:
@@ -22,6 +23,7 @@ class BleManager {
 
     /// @brief needs to be public for the controller
     TransferService transferService;
+    CalibrateService calibrateService;
 
   private:
     /// @brief what to do on disconnect from phone

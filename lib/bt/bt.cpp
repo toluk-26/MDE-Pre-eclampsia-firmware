@@ -18,6 +18,7 @@ void BleManager::begin() {
     timeService.begin(); // Start RTC Service
     configService.begin();
     transferService.begin();
+    calibrateService.begin();
 
     // Set up and start advertising
     this->startAdvertising();

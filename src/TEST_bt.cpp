@@ -10,6 +10,7 @@
 #include "flashlog.hpp"
 #include "rtc.hpp"
 #include <Arduino.h>
+#include "StreamController.hpp"
 
 #ifndef DEBUG
 #error "you seem to be in the wrong env"
@@ -17,6 +18,8 @@
 #include <append.hpp>
 
 TransferController tcrtl;
+StreamController sctrl;
+
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
@@ -76,4 +79,8 @@ void loop() {
     if (!tcrtl.isDone()) {
         tcrtl.run();
     }
+
+    if(bt.calibrateService.stream_flag)
+        sctrl.run();
+
 }

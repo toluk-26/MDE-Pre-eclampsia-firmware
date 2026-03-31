@@ -19,7 +19,7 @@ err_t TransferService::begin() {
     _data.setUuid(UUID_CHR_DATA);
     _data.setProperties(CHR_PROPS_INDICATE);
     _data.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-    _data.setFixedLen(Bluefruit.getMaxMtu(BLE_GAP_ROLE_PERIPH)); // TODO: try 0
+    _data.setFixedLen(0); // TODO: try 0
     _data.setUserDescriptor("Data");
     VERIFY_STATUS(_data.begin());
 
@@ -35,7 +35,7 @@ err_t TransferService::begin() {
 }
 
 void TransferService::sendData(const std::vector<uint8_t> &data) {
-    _data.indicate(data.data(), data.size());
+    this->_data.indicate(data.data(), data.size());
 }
 
 void TransferService::sendSize(const uint32_t &size) {
