@@ -29,9 +29,9 @@ void CalibrateService::sendData(const std::vector<uint8_t> &data) {
 #ifdef DEBUG
     String msg;
     for (uint i = 0; i < data.size(); i++) {
-        msg += data[i];
+        msg += String(data[i], HEX);
     }
-    LOGV("Sending %s, size:%d", msg, data.size());
+    LOGV3("Sending 0x%s, size:%d", msg.c_str(), data.size());
 #endif
 }
 
