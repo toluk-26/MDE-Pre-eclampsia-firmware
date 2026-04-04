@@ -16,23 +16,23 @@
 #define LOG_O 0x001000
 
 // TODO: move to a better place
-#pragma pack(push, 4)
-struct ConfigLoad {
+#pragma pack(push, 1)
+struct ConfigPack {
     uint32_t pid; // patient id TODO: confirm if size is okay
     uint8_t diastolic_min;
     uint8_t diastolic_max;
-    uint8_t diastolic_coeff_m; // TODO: confirm data type
-    uint8_t diastolic_coeff_b; // TODO: confirm data type
+    float diastolic_coeff_m; // TODO: confirm data type
+    float diastolic_coeff_b; // TODO: confirm data type
     uint8_t systolic_min;
     uint8_t systolic_max;
-    uint8_t systolic_coeff_m; // TODO: confirm data type
-    uint8_t systolic_coeff_b; // TODO: confirm data type
+    float systolic_coeff_m; // TODO: confirm data type
+    float systolic_coeff_b; // TODO: confirm data type
 };
 #pragma pop()
 
 #pragma pack(push, 1)
 struct DataHdr {
-    uint8_t type; // RecType
+    uint8_t type; // PayloadType
     uint32_t len; // payload length
     uint64_t ts;  // unix seconds
 };
@@ -58,30 +58,41 @@ SPIFlash_Device_t const p25q16h{
 
 class FlashLog {
   public:
-    /**
-     * @brief check the external flash memory and confirm data or create
-     * template
-     */
+    enum PayloadType : uint8_t { SENSOR_t, DEBUG_t };
+
+    /// @brief creates needed external variables
     FlashLog();
 
+    /// @brief initializes qflash and checks config
     void begin();
 
     /**
-     * @brief append data to data block
+     * @brief forms a packets by type and puts it at the end of the data section
+     * of qflash memory
+     * @param type of PayloadType
+     * @param payload preformatted vector of data
+     * @return whether it appended or nah
      */
-    bool append(uint8_t type, const std::vector<uint8_t> &payload);
+    bool append(PayloadType type, const std::vector<uint8_t> &payload);
 
+    /**
+     * @param addr address to read packet from
+     * @param header saves header to this
+     * @param payload saves payload to this
+     * @return successful read
+     */
     bool read(uint32_t addr, DataHdr &header, std::vector<uint8_t> &payload);
 
-    bool getConfig();
-    bool getData();
+    ConfigPack getConfig();
+    uint8_t getTz();
     bool setConfig();
 
-    void cleanConfig();
+    /// @brief deletes config section
+    void cleanConfig(); 
+    /// @brief deletes data section
     void cleanLogs();
+    /// @brief deletes entire chip
     void cleanAll();
-
-    enum RecType : uint8_t { SENSOR_t, DEBUG_t };
 
 #ifdef DEBUG // debug functions
     void printInfo();
@@ -90,8 +101,6 @@ class FlashLog {
     void printEntry(const DataHdr &h, const std::vector<uint8_t> &payload);
     void printHeader(const DataHdr &h);
     void printData(const std::vector<uint8_t> &payload);
-#endif
-#ifdef DEBUG_FLASH
     void dumpConfig();
     void dumpData();
     void dump() { dump(0, _flashSize); };
@@ -105,7 +114,7 @@ class FlashLog {
     const uint32_t CFG_OFFSET = 0x000000;  // config data block
     const uint32_t LOG_OFFSET = LOG_O;     // log block
 
-    ConfigLoad configload;
+    ConfigPack configload;
 
     SPIClass _SPI_2;
     Adafruit_FlashTransport_SPI _QFlashTransport;
@@ -121,7 +130,7 @@ class FlashLog {
      * once at start.
      * @return found tail addr or nah
      */
-    bool findTail(); // TODO: move to private
+    bool findTail();
 };
 
 extern FlashLog mem;

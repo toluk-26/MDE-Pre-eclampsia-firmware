@@ -18,7 +18,7 @@
 #include <inttypes.h>
 #endif
 
-RTC rtc; // all rtc clock. call clock.tick() as much as possible
+RTC rtc; // all rtc clock. call rtc.tick() as much as possible
 
 static volatile bool alarmFlag = false;    // if the alarm interrupt
 static volatile bool snoozeFlag = false;   // if the snooze interrupt
@@ -59,8 +59,6 @@ RTC::RTC() {
 
     // enable overflow interrupt
     nrf_rtc_int_enable(NRF_RTC2, NRF_RTC_INT_OVERFLOW_MASK);
-
-    // TODO: move and enable
 
     // prepare interrupt
     NVIC_DisableIRQ(RTC2_IRQn);
@@ -163,9 +161,9 @@ void print64(uint64_t v) {
     if (hi) {
         Serial.print(hi);
         Serial.print(lo < 1000000000UL ? "0" : "");
-        Serial.print(lo);
+        Serial.println(lo);
     } else {
-        Serial.print(lo);
+        Serial.println(lo);
     }
 }
 #endif

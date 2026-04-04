@@ -18,6 +18,7 @@ class RTC {
   public:
     RTC();
 
+    /// @brief checks for flags
     bool tick();
 
     /**

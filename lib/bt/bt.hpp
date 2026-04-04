@@ -8,10 +8,10 @@
 #pragma once
 #include <bluefruit.h>
 
-#include "TimeService.hpp"
-#include "ConfigService.hpp"
-#include "TransferService.hpp"
 #include "CalibrateService.hpp"
+#include "ConfigService.hpp"
+#include "TimeService.hpp"
+#include "TransferService.hpp"
 
 class BleManager {
   public:
@@ -38,18 +38,17 @@ class BleManager {
     /// @brief ble device info service
     void configDeviceInfo();
 
-    /**
-     * @brief configure the ble device for broadcasting
-     */
+    /// @brief configure the ble device for broadcasting
     void configBleHardware();
 
-    // BLE Services
+    // Bluefruit Services
     BLEDfu _dfu;     // OTA DFU service
     BLEDis _devInfo; // device information
     BLEBas _battery; // battery info
-    // TODO: add services here
-    TimeService timeService;
-    ConfigService configService;
+
+    // PES services
+    TimeService timeService;     // update time and tz
+    ConfigService configService; // handles configuration settings
 };
 
 extern BleManager bt;

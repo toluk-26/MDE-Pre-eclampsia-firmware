@@ -1,3 +1,12 @@
+/**
+ * @file CalibrateService.hpp
+ * @author Tolu Kolade
+ * @brief calibrate service implementation. intended to be used by a controller to send live
+ * data of a sensor
+ * @date March 31, 2026
+ * @todo remove trigger and use setCccdWriteCallback()
+ */
+
 #include "CalibrateService.hpp"
 #include "log.hpp"
 
@@ -26,6 +35,8 @@ err_t CalibrateService::begin() {
 
 void CalibrateService::sendData(const std::vector<uint8_t> &data) {
     _stream.notify(data.data(), data.size());
+
+    // print data to serial monitor
 #ifdef DEBUG
     String msg;
     for (uint i = 0; i < data.size(); i++) {
@@ -41,6 +52,7 @@ void CalibrateService::trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
         LOGE("trigger received size is wrong");
         return;
     }
+    // get class
     CalibrateService &svc = (CalibrateService &)chr->parentService();
 
     if (svc.stream_flag) {
@@ -49,5 +61,15 @@ void CalibrateService::trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     } else {
         svc.stream_flag = true; // set flag
         LOGV("Stream trigger flag enabled!");
+    }
+}
+
+void CalibrateService::startTransfer_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+                      uint16_t value) {
+    if (value & 0x0001) {
+        // notifications enabled
+    }
+    if (value & 0x0002) {
+        // indications enabled
     }
 }

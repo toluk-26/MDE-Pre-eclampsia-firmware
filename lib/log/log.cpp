@@ -21,7 +21,7 @@ bool Log::sensor(const uint8_t heartrate, const uint8_t diastolic,
                  const uint8_t systolic, const uint8_t code) {
     LOGV("Saving Sensor values %d, %d, %d, %d", heartrate, diastolic, systolic,
          code);
-    return mem.append(FlashLog::RecType::SENSOR_t,
+    return mem.append(FlashLog::PayloadType::SENSOR_t,
                       {heartrate, diastolic, systolic, code});
 }
 
@@ -55,7 +55,7 @@ bool Log::vlog(LogLevel level, const char *file, const char *func, int line,
     Serial.println(msg);
 #endif
 
-// write to memory
+    // write to memory
     if (level != LogLevel::VERBOSE) {
         // new format
         msg = String((int)level);
@@ -67,7 +67,7 @@ bool Log::vlog(LogLevel level, const char *file, const char *func, int line,
 
         std::vector<uint8_t> data(msg.length() + 1);
         msg.getBytes(data.data(), msg.length() + 1);
-        return mem.append(FlashLog::RecType::DEBUG_t, data);
+        return mem.append(FlashLog::PayloadType::DEBUG_t, data);
     }
 
     return true;

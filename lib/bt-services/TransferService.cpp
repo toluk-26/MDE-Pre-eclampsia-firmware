@@ -1,3 +1,13 @@
+/**
+ * @file TransferService.cpp
+ * @author Tolu Kolade
+ * @brief Transfer Service. used to stream packets in flash data block
+ * @date March 29, 2026
+ * 
+ * @todo move data to cccdwritecallback() to use as trigger
+ * @todo consider using indicate with no size or size + notify for better speed
+ */
+
 #include "TransferService.hpp"
 #include "log.hpp"
 #include <bluefruit.h>
@@ -20,7 +30,7 @@ err_t TransferService::begin() {
     _data.setUuid(UUID_CHR_DATA);
     _data.setProperties(CHR_PROPS_INDICATE);
     _data.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-    _data.setFixedLen(0); // TODO: try 0
+    _data.setMaxLen(100);
     _data.setUserDescriptor("Data");
     VERIFY_STATUS(_data.begin());
 
@@ -37,6 +47,7 @@ err_t TransferService::begin() {
 
 void TransferService::sendData(const std::vector<uint8_t> &data) {
     this->_data.indicate(data.data(), data.size());
+    // LOGV("\tSize: %u", data.size());
 }
 
 void TransferService::sendSize(const uint32_t &size) { _size.notify32(size); }
