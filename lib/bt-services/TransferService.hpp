@@ -38,4 +38,6 @@ class TransferService : public BLEService {
 
     static void trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                            uint8_t *data, uint16_t len);
+    static void start(uint16_t conn_hdl, BLECharacteristic *chr,
+                      uint16_t value);
 };

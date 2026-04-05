@@ -28,7 +28,7 @@ struct ConfigPack {
     float systolic_coeff_m; // TODO: confirm data type
     float systolic_coeff_b; // TODO: confirm data type
 };
-#pragma pop()
+#pragma pack(pop)
 
 #pragma pack(push, 1)
 struct DataHdr {

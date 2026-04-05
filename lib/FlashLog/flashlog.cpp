@@ -23,7 +23,7 @@ void FlashLog::begin() {
     if (!_qFlash.begin(&p25q16h, 1)) {
         _flashOk = false;
         LOGV("failed to initialize QSPI flash chip"); // no point in error since
-                                                      // flash isnt working
+                                                      // flash isn't working
                                                       // anyways
 
         return; // TODO: change to return, go to low power, set error status

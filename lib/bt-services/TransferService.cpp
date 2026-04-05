@@ -3,7 +3,7 @@
  * @author Tolu Kolade
  * @brief Transfer Service. used to stream packets in flash data block
  * @date March 29, 2026
- * 
+ *
  * @todo move data to cccdwritecallback() to use as trigger
  * @todo consider using indicate with no size or size + notify for better speed
  */
@@ -30,8 +30,9 @@ err_t TransferService::begin() {
     _data.setUuid(UUID_CHR_DATA);
     _data.setProperties(CHR_PROPS_INDICATE);
     _data.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-    _data.setMaxLen(100);
+    _data.setMaxLen(150);
     _data.setUserDescriptor("Data");
+    _data.setCccdWriteCallback(TransferService::start);
     VERIFY_STATUS(_data.begin());
 
     // data characteristic
@@ -68,4 +69,21 @@ void TransferService::trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     }
 #endif
     svc.transfer_flag = true; // set flag
+}
+
+void TransferService::start(uint16_t conn_hdl, BLECharacteristic *chr,
+                            uint16_t value) {
+    TransferService &svc = (TransferService &)chr->parentService();
+    if (value == 0x0000) {
+        svc.transfer_flag = false;
+        LOGV("transfer will stop");
+    } else if (value & 0x0001) {
+        // notifications enabled
+        svc.transfer_flag = true;
+        LOGV("transfer will start (notify)");
+    } else if (value & 0x0002) {
+        // indications enabled
+        svc.transfer_flag = true;
+        LOGV("transfer will start (indicate)");
+    }
 }
