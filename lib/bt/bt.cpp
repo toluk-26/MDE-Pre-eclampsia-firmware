@@ -40,6 +40,8 @@ void PESBt::disconnect() {
     Serial.println("STATUS: Disconnected bluetooth service");
 }
 
+bool PESBt::isConnected() { return Bluefruit.connected() > 0; }
+
 void PESBt::startAdv(void) {
     // Advertising packet
     Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);

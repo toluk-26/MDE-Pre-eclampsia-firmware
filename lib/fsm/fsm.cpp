@@ -1,8 +1,8 @@
 #include "fsm.h"
 #include "flashlog.hpp" 
 
-FSM::FSM(Sensors &sensors_, Indicators &indicators_, Power &power_)
-    : sensors(sensors_), indicators(indicators_), power(power_) {}
+FSM::FSM(Sensors &sensors_, Indicators &indicators_, Power &power_, PESBt &bt_)
+    : sensors(sensors_), indicators(indicators_), power(power_), bt(bt_) {}
 
 void FSM::run() {
     switch (currentState) {
@@ -48,6 +48,13 @@ void FSM::run() {
 void FSM::handleInit() {
     sensors.init();
     indicators.init();
+    bt.init();
+    Serial.println("INIT: BLE started. Waiting for connection...");
+    if (!bt.isConnected()) {
+        currentState = STATE_INIT; // stay in INIT
+        return;
+    }
+    Serial.println("INIT: BLE connected");
     if (power.isBatteryLow())
         currentState = STATE_LOW_BATT;
     else

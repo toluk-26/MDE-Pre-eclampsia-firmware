@@ -15,6 +15,7 @@ class PESBt {
 
     /// @brief turn off ble
     void disconnect();
+    bool isConnected();
 
   protected:
     /// @brief what to do on disconnect from phone
