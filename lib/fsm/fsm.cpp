@@ -49,12 +49,10 @@ void FSM::handleInit() {
     sensors.init();
     indicators.init();
     bt.init();
-    Serial.println("INIT: BLE started. Waiting for connection...");
     if (!bt.isConnected()) {
         currentState = STATE_INIT; // stay in INIT
         return;
     }
-    Serial.println("INIT: BLE connected");
     if (power.isBatteryLow())
         currentState = STATE_LOW_BATT;
     else
