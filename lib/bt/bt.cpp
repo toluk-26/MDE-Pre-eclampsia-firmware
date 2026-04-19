@@ -37,6 +37,8 @@ void BleManager::stop() {
     LOGV("Disconnected bluetooth service");
 }
 
+bool PESBt::isConnected() { return Bluefruit.connected() > 0; }
+
 void BleManager::startAdvertising(void) {
     // Advertising packet
     Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);

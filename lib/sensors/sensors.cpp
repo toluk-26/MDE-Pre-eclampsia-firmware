@@ -9,7 +9,19 @@ void Sensors::init() {
 }
 
 void Sensors::calibrate() {
-    // implement calibration
+    delay(2000);
+
+    for (int i = 0; i < 50; i++) {
+        imu.readFloatAccelX();
+        imu.readFloatAccelY();
+        imu.readFloatAccelZ();
+        delay(20);
+    }
+
+    for (int i = 0; i < 100; i++) {
+        ppg.getIR();
+        delay(10);
+    }
 }
 
 bool Sensors::motionOK() {

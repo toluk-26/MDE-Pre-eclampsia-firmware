@@ -20,6 +20,7 @@ FlashLog::FlashLog()
 void FlashLog::begin() {
     if (_flashOk) return; // check if flash is already init
 
+void FlashLog::begin() {
     // init memory
     if (!_qFlash.begin(&p25q16h, 1)) {
         _flashOk = false;

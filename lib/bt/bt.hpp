@@ -19,6 +19,8 @@ class BleManager {
     void begin();
 
     /// @brief turn off ble
+    void disconnect();
+    bool isConnected();
     void stop();
 
     /// @brief needs to be public for the controller

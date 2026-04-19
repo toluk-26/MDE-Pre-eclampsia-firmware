@@ -103,10 +103,8 @@ void RTC::setTime(uint64_t time) {
     // TODO: idk what the nrf code does. we will need to redo the alarm
     _time = time;
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
-    LOGV3("Base time updated to ");
-#ifdef DEBUG
-    print64(time);
-#endif
+    LOGV3("Base time updated to %d%d", static_cast<uint32_t>(time >> 32),
+          static_cast<uint32_t>(time));
 }
 
 int8_t RTC::getTz() {
