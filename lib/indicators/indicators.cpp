@@ -2,7 +2,7 @@
 
 #define LED_RED 2
 #define LED_YELLOW 3
-#define BUZZER_PIN 4
+#define BUZZER_PIN 4 // Need to check pin 
 
 void Indicators::init() {
     pinMode(LED_RED, OUTPUT);
@@ -24,5 +24,5 @@ void Indicators::alertHighBP() { digitalWrite(LED_RED, HIGH); }
 
 void Indicators::alertCriticalBP() {
     digitalWrite(LED_RED, HIGH);
-    digitalWrite(BUZZER_PIN, HIGH);
+    tone(BUZZER_PIN, 3000); // Piezo buzzers usually are audible between 2khz to 4khz so i guess 3khz is good?
 }
