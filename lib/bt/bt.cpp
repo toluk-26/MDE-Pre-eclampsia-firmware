@@ -8,6 +8,7 @@
 #include "log.hpp"
 
 BleManager bt;
+bool BleManager::disconnectFlag = false;
 
 void BleManager::begin() {
     this->configBleHardware(); // configure BLE
@@ -87,6 +88,7 @@ void BleManager::onDisconnect(uint16_t conn_handle, uint8_t reason) {
     (void)reason;
 
     LOGV("Disconnected, reason = 0x%X", reason);
+    disconnectFlag = true;
 }
 
 void BleManager::configBleHardware() {
@@ -113,9 +115,8 @@ void BleManager::configBleHardware() {
 
 void BleManager::configDeviceInfo() {
     // Configure and Start Device Information Service
-    _devInfo.setManufacturer("S26-09");
-    _devInfo.setModel("Preeclampsia Screener"); // TODO: change to something
-                                                // more meaningful? numeral?
+    _devInfo.setManufacturer("VT ECE S26-09");
+    _devInfo.setModel("PS0001A");
     _devInfo.setSoftwareRev(SOFTWARE_REVISION);
     _devInfo.setHardwareRev(HARDWARE_REVISION);
     _devInfo.begin();
