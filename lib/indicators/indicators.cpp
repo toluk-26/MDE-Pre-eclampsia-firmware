@@ -4,7 +4,6 @@
 #define LED_YELLOW 3
 #define BUZZER_PIN 4
 
-
 void Indicators::init() {
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_YELLOW, OUTPUT);

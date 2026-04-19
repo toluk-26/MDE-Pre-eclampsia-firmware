@@ -30,8 +30,8 @@ Date: 2026/02/09 Modified:
 #include "accelerometer.hpp"
 #include <vector>
 
-// #define usb_c_to_crown
-#define usb_c_to_chin
+#define usb_c_to_crown
+// #define usb_c_to_chin
 // #define usb_c_to_left_ear
 // #define usb_c_to_right_ear
 #if (defined(usb_c_to_chin) + defined(usb_c_to_crown) +                        \

@@ -1,6 +1,6 @@
 #pragma once
 #include "bpstatus.h"
-#include "clock.hpp"
+#include "rtc.hpp"
 #include <LSM6DS3.h>
 #include <MAX30105.h>
 

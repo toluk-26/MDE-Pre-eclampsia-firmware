@@ -38,7 +38,7 @@ bool Sensors::positionOK() {
     return az > 0.7;
 }
 
-bool Sensors::rtcTriggered() { return ::clock.tick(); }
+bool Sensors::rtcTriggered() { return ::rtc.tick(); }
 
 BPStatus Sensors::measureBP() {
     int systolic = random(110, 170);

@@ -9,6 +9,7 @@ Modified:
 #include "actigraph.hpp"
 
 #include "accelerometer.hpp"
+#include "log.hpp"
 #include <vector>
 
 actigraph::actigraph(int windowLength, int windowCount, float movementThreshold,
@@ -23,10 +24,7 @@ bool actigraph::run() {
     // builds windows
     for (unsigned int window = 0; window < windowCount; window++) {
 
-#ifdef DEBUG
-        Serial.print("building Window #");
-        Serial.println(window);
-#endif
+        LOGV("building Window #%d", window);
 
         std::vector<std::vector<float>> window_samples = {};
         int timestamp = millis();
@@ -40,20 +38,14 @@ bool actigraph::run() {
     }
     xl.stop(); // turn off accelerometer
 
-#ifdef DEBUG
-    Serial.println("done building windows");
-    Serial.println("checking angle and movement");
-#endif
+    LOGV("done building windows");
+    LOGV("checking angle and movement");
 
     bool angleOK = goodAngle();
     bool moveOK = goodMovement();
 
-#ifdef DEBUG
-    Serial.print("angle good? ");
-    Serial.println(angleOK);
-    Serial.print("movement good? ");
-    Serial.println(moveOK);
-#endif
+    LOGV("angle is ", angleOK ? "good" : "not good");
+    LOGV("movement is ", moveOK ? "good" : "not good");
 
     return (angleOK && moveOK);
 }
@@ -72,11 +64,8 @@ bool actigraph::goodAngle() {
             float z = data[window][xyz][2];
 
             // Device is not deployed or body is unacceptably positioned
-            if (z > 0) {
-#ifdef DEBUG
-                Serial.print("device is inverted, z= ");
-                Serial.println(z);
-#endif
+            if (z < 0) {
+                LOGV("device is inverted, z= %f", z);
                 return false;
             }
             pitches.push_back(pitch(x, y, z));
@@ -88,12 +77,8 @@ bool actigraph::goodAngle() {
     float meanPitch = mean(pitches);
     float meanYaw = mean(yaws);
 
-#ifdef DEBUG
-    Serial.print("Mean Pitch: ");
-    Serial.println(meanPitch);
-    Serial.print("Mean Yaw: ");
-    Serial.println(meanYaw);
-#endif
+    LOGV("Mean Pitch: %f", meanPitch);
+    LOGV("Mean Yaw: %f", meanYaw);
 
     // if angles are within threshold, return true, else false
     if (abs(meanPitch) < maxHeadAngle && abs(meanYaw) < maxHeadAngle) {
@@ -117,19 +102,11 @@ bool actigraph::goodMovement() {
 
         float mSD = standardDeviation(windowMag);
 
-#ifdef DEBUG
-        Serial.print("Window #");
-        Serial.print(window);
-        Serial.print(" Standard Deviation: ");
-        Serial.println(mSD);
-#endif
+        LOGV("Window #%u", window);
+        LOGV(" Standard Deviation: %f", mSD);
 
         if (mSD > movementThreshold) {
-#ifdef DEBUG
-            Serial.print("Window #");
-            Serial.print(window);
-            Serial.println("'s SD IS TOO BIG");
-#endif
+            LOGV("Window #%u's SD IS TOO BIG", window);
             return false; // return false if any window fails
         }
     }
@@ -139,13 +116,13 @@ bool actigraph::goodMovement() {
 float actigraph::pitch(float x, float y, float z) {
     float pitch = 0.0;
 #if defined(usb_c_to_chin)
-    pitch = atan2(-x, -z);
+    pitch = atan2(-x, z);
 #elif defined(usb_c_to_crown)
-    pitch = atan2(x, -z);
+    pitch = atan2(x, z);
 #elif defined(usb_c_to_left_ear)
-    pitch = atan2(y, -z);
+    pitch = atan2(y, z);
 #elif defined(usb_c_to_right_ear)
-    pitch = atan2(-y, -z);
+    pitch = atan2(-y, z);
 #endif
     pitch = pitch * (180.0 / 3.14159); // convert to degrees
     return pitch;
@@ -154,13 +131,13 @@ float actigraph::pitch(float x, float y, float z) {
 float actigraph::yaw(float x, float y, float z) {
     float yaw = 0.0;
 #if defined(usb_c_to_chin)
-    yaw = atan2(-y, -z);
+    yaw = atan2(-y, z);
 #elif defined(usb_c_to_crown)
-    yaw = atan2(y, -z);
+    yaw = atan2(y, z);
 #elif defined(usb_c_to_left_ear)
-    yaw = atan2(x, -z);
+    yaw = atan2(x, z);
 #elif defined(usb_c_to_right_ear)
-    yaw = atan2(-x, -z);
+    yaw = atan2(-x, z);
 #endif
     yaw = yaw * (180.0 / 3.14159); // convert to degrees
     return yaw;

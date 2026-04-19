@@ -131,3 +131,80 @@ void FSM::handleBPCritical() {
     indicators.alertCriticalBP();
     currentState = STATE_DONE;
 }
+
+void FSM::handleInit() {
+    sensors.init();
+    indicators.init();
+    if (power.isBatteryLow())
+        currentState = STATE_LOW_BATT;
+    else
+        currentState = STATE_CHECK_CONFIG;
+}
+
+void FSM::handleLowBattery() {
+    indicators.blinkYellow(10000);
+    if (power.isCharging()) currentState = STATE_CHARGING;
+}
+
+void FSM::handleCharging() {
+    indicators.blinkYellow(500);
+    if (!power.isCharging() &&
+        power.getBatteryPercent() > 30) // low battery is below 30 percent
+        currentState = STATE_INIT;
+}
+
+void FSM::handleCheckConfig() {
+    // Attempt to load config from flash
+    bool configValid = mem.getConfig(); // true if config loaded correctly
+
+    if (!configValid) {
+        LOGE("invalid or missing config. Resetting defaults...");
+        mem.cleanConfig(); // erase config sector
+        mem.setConfig();   // write default config using FlashLog's internal
+                           // defaults
+        LOGV3("Default config written");
+    } else {
+        LOGV3("CONFIG: Valid config found");
+    }
+    currentState = STATE_CALIBRATE;
+}
+
+void FSM::handleCalibrate() {
+    sensors.calibrate();
+    currentState = STATE_IDLE;
+}
+
+void FSM::handleIdle() {
+    power.enterLowPowerMode();
+    if (sensors.rtcTriggered()) currentState = STATE_CONDITION_CHECK;
+}
+
+void FSM::handleConditionCheck() {
+    if (sensors.motionOK() && sensors.positionOK())
+        currentState = STATE_MEASURE_BP;
+    else {
+        power.scheduleRetry(60); // changed from 20 mins to 60 mins as per Sam's
+                                 // comment on REM sleep
+        currentState = STATE_IDLE;
+    }
+}
+
+void FSM::handleMeasureBP() {
+    BPStatus status = sensors.measureBP();
+    if (status == BPStatus::CRITICAL)
+        currentState = STATE_BP_CRITICAL;
+    else if (status == BPStatus::ELEVATED)
+        currentState = STATE_BP_HIGH;
+    else
+        currentState = STATE_DONE;
+}
+
+void FSM::handleBPHigh() {
+    indicators.alertHighBP();
+    currentState = STATE_DONE;
+}
+
+void FSM::handleBPCritical() {
+    indicators.alertCriticalBP();
+    currentState = STATE_DONE;
+}

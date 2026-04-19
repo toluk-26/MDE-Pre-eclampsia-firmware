@@ -14,9 +14,9 @@
 #define PRESCALER_C 4095 // Max value is 4095
 
 /// @brief functions to manipulate time and interrupts
-class Time {
+class RTC {
   public:
-    Time();
+    RTC();
 
     bool tick();
 
@@ -33,6 +33,21 @@ class Time {
      * @return successfully set time
      */
     void setTime(uint64_t time);
+
+    /**
+     * @brief get the timezone. NOTE: must determine whether tz will be saved to
+     * flash or nah. i advocate for nah
+     * @return unix time
+     */
+    int8_t getTz();
+
+    /**
+     * @brief set the timezone NOTE: must determine whether tz will be saved to
+     * flash or nah. i advocate for nah
+     * @param tz the tz
+     * @return successfully set time
+     */
+    void setTz(int8_t tz);
 
     /**
      * @brief set interrupt for time
@@ -55,7 +70,7 @@ class Time {
     uint64_t _time = 1767243600;
 
     /// @brief timezone
-    uint8_t _tz;
+    int8_t _tz = 0;
 
     bool a, s;
 
@@ -67,7 +82,7 @@ class Time {
     uint64_t convertCounter(uint32_t counter);
 };
 
-extern Time clock;
+extern RTC rtc;
 
 #ifdef DEBUG
 /**

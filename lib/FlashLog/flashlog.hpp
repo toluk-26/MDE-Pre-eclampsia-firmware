@@ -13,6 +13,31 @@
 #include <cstdint>
 #include <vector>
 
+#define LOG_O 0x001000
+
+// TODO: move to a better place
+#pragma pack(push, 4)
+struct ConfigLoad {
+    uint32_t pid; // patient id TODO: confirm if size is okay
+    uint8_t diastolic_min;
+    uint8_t diastolic_max;
+    uint8_t diastolic_coeff_m; // TODO: confirm data type
+    uint8_t diastolic_coeff_b; // TODO: confirm data type
+    uint8_t systolic_min;
+    uint8_t systolic_max;
+    uint8_t systolic_coeff_m; // TODO: confirm data type
+    uint8_t systolic_coeff_b; // TODO: confirm data type
+};
+#pragma pop()
+
+#pragma pack(push, 1)
+struct DataHdr {
+    uint8_t type; // RecType
+    uint32_t len; // payload length
+    uint64_t ts;  // unix seconds
+};
+#pragma pack(pop)
+
 // QSPI flash device information. from online
 SPIFlash_Device_t const p25q16h{
     .total_size = (1UL << 21), // 2MiB
@@ -39,21 +64,17 @@ class FlashLog {
      */
     FlashLog();
 
-    /**
-     * @brief finds where the data ends and sets the tail addr var to it. runs
-     * once at start.
-     * @return found tail addr or nah
-     */
-    bool _findTail(); // TODO: move to private
+    void begin();
 
     /**
      * @brief append data to data block
      */
     bool append(uint8_t type, const std::vector<uint8_t> &payload);
 
+    bool read(uint32_t addr, DataHdr &header, std::vector<uint8_t> &payload);
+
     bool getConfig();
     bool getData();
-
     bool setConfig();
 
     void cleanConfig();
@@ -66,7 +87,9 @@ class FlashLog {
     void printInfo();
     void printMeta();
     void printConfig();
-    void printData();
+    void printEntry(const DataHdr &h, const std::vector<uint8_t> &payload);
+    void printHeader(const DataHdr &h);
+    void printData(const std::vector<uint8_t> &payload);
 #endif
 #ifdef DEBUG_FLASH
     void dumpConfig();
@@ -80,22 +103,9 @@ class FlashLog {
     const uint32_t SECTOR_SIZE = 0x001000; // 4 KB
     const uint32_t BLOCK_SIZE = 0x010000;  // 64 KB
     const uint32_t CFG_OFFSET = 0x000000;  // config data block
-    const uint32_t LOG_OFFSET = 0x001000;  // log block
+    const uint32_t LOG_OFFSET = LOG_O;     // log block
 
-#pragma pack(push, 2)
-    struct DataHdr {
-        uint8_t type; // RecType
-        uint16_t len; // payload length
-        uint32_t ts;  // unix seconds
-    };
-#pragma pack(pop)
-
-    struct ConfigLoad {
-
-        uint32_t pid; // patient id TODO: confirm if size is okay
-        uint32_t thres_dia;
-        uint32_t thres_sys;
-    };
+    ConfigLoad configload;
 
     SPIClass _SPI_2;
     Adafruit_FlashTransport_SPI _QFlashTransport;
@@ -105,6 +115,13 @@ class FlashLog {
     bool _flashOk = false;              // is the QSPI okay?
     uint32_t _flashSize = 0;            // flash size 2Mb
     uint32_t _logTailAddr = LOG_OFFSET; // size of the logs
+
+    /**
+     * @brief finds where the data ends and sets the tail addr var to it. runs
+     * once at start.
+     * @return found tail addr or nah
+     */
+    bool findTail(); // TODO: move to private
 };
 
 extern FlashLog mem;
