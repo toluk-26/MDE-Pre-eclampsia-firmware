@@ -1,4 +1,6 @@
 #include "power.h"
+#include "clock.hpp"
+#include "clock.cpp"
 
 #define BATTERY_PIN A0
 #define CHARGER_PIN 5
@@ -13,5 +15,14 @@ void Power::enterLowPowerMode() {
 }
 
 void Power::scheduleRetry(int minutes) {
-    // implement timer
+    uint64_t currentTime = clock.getTime();
+    uint64_t wakeTime = currentTime + (minutes * 60);
+
+    clock.setAlarm(wakeTime);
+
+#ifdef DEBUG
+    Serial.print("Retry scheduled in ");
+    Serial.print(minutes);
+    Serial.println(" minutes");
+#endif
 }

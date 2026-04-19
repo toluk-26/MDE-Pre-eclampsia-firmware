@@ -1,12 +1,13 @@
 #pragma once
 #include "bpstatus.h" // include BPStatus enum
+#include "bt.hpp"
 #include "indicators.h"
 #include "power.h"
 #include "sensors.h"
 
 class FSM {
   public:
-    FSM(Sensors &sensors, Indicators &indicators, Power &power);
+    FSM(Sensors &sensors, Indicators &indicators, Power &power, PESBt &bt);
     void run();
 
   private:
@@ -30,6 +31,7 @@ class FSM {
     Sensors &sensors;
     Indicators &indicators;
     Power &power;
+    PESBt &bt;
 
     void handleInit();
     void handleLowBattery();
