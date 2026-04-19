@@ -20,7 +20,6 @@ FlashLog::FlashLog()
 void FlashLog::begin() {
     if (_flashOk) return; // check if flash is already init
 
-void FlashLog::begin() {
     // init memory
     if (!_qFlash.begin(&p25q16h, 1)) {
         _flashOk = false;
@@ -116,10 +115,10 @@ bool FlashLog::read(uint32_t addr, DataHdr &header,
     //     return false;
     // }
 
-// #ifdef DEBUG
-//     LOGV("Reading Addr: %x", addr);
-//     printEntry(header, payload);
-// #endif
+    // #ifdef DEBUG
+    //     LOGV("Reading Addr: %x", addr);
+    //     printEntry(header, payload);
+    // #endif
     return true;
 }
 

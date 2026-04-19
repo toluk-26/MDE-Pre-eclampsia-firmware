@@ -37,7 +37,7 @@ void BleManager::stop() {
     LOGV("Disconnected bluetooth service");
 }
 
-bool PESBt::isConnected() { return Bluefruit.connected() > 0; }
+bool BleManager::isConnected() { return Bluefruit.connected() > 0; }
 
 void BleManager::startAdvertising(void) {
     // Advertising packet
