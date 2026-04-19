@@ -9,6 +9,7 @@
  */
 
 #include "flashlog.hpp"
+#include "bt.hpp"
 #include "log.hpp"
 #include "rtc.hpp"
 
@@ -114,10 +115,10 @@ bool FlashLog::read(uint32_t addr, DataHdr &header,
     //     return false;
     // }
 
-#ifdef DEBUG
-    LOGV("Reading Addr: %x", addr);
-    printEntry(header, payload);
-#endif
+// #ifdef DEBUG
+//     LOGV("Reading Addr: %x", addr);
+//     printEntry(header, payload);
+// #endif
     return true;
 }
 
@@ -197,6 +198,9 @@ bool FlashLog::setConfig() {
     _qFlash.writeBuffer(0, (uint8_t *)&configload,
                         sizeof(configload)); // write header
 #endif
+
+    // LOGV("updating ble");
+    // bt.configService.updateConfig(configload);
 
     return true;
 }

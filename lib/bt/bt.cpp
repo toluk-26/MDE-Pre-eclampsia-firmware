@@ -8,6 +8,7 @@
 #include "log.hpp"
 
 BleManager bt;
+bool BleManager::disconnectFlag = false;
 
 void BleManager::begin() {
     this->configBleHardware(); // configure BLE
@@ -85,6 +86,7 @@ void BleManager::onDisconnect(uint16_t conn_handle, uint8_t reason) {
     (void)reason;
 
     LOGV("Disconnected, reason = 0x%X", reason);
+    disconnectFlag = true;
 }
 
 void BleManager::configBleHardware() {

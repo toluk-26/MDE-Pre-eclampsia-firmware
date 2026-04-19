@@ -29,7 +29,7 @@ err_t TimeService::begin() {
 
     // timezone characteristic
     _tz.setUuid(UUID_CHR_TIMEZONE);
-    _tz.setProperties(CHR_PROPS_WRITE | CHR_PROPS_READ);
+    _tz.setProperties(CHR_PROPS_WRITE | CHR_PROPS_NOTIFY | CHR_PROPS_READ);
     _tz.setWriteCallback(TimeService::tz_cb, true);
     _tz.setPermission(SECMODE_OPEN, SECMODE_OPEN);
     _tz.setFixedLen(sizeof(uint8_t));
@@ -51,7 +51,7 @@ void TimeService::time_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     uint64_t time;
     memcpy(&time, data, len);
     rtc.setTime(time); // save the time to the rtc
-    LOGV("Unix Time Received: %d%d", static_cast<uint32_t>(time >> 32),
+    LOGV("Unix Time Received: %u%u", static_cast<uint32_t>(time >> 32),
          static_cast<uint32_t>(time));
 }
 
@@ -68,6 +68,6 @@ void TimeService::tz_cb(uint16_t conn_hdl, BLECharacteristic *chr,
 
     // echo
     TimeService &svc = (TimeService &)chr->parentService();
-    svc._tz.write8(rtc.getTz());
+    svc._tz.notify8(rtc.getTz());
     LOGV("Timezone Received: %d", tz);
 }

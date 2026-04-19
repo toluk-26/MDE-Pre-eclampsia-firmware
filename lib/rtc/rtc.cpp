@@ -103,8 +103,10 @@ void RTC::setTime(uint64_t time) {
     // TODO: idk what the nrf code does. we will need to redo the alarm
     _time = time;
     nrf_rtc_task_trigger(NRF_RTC2, NRF_RTC_TASK_CLEAR);
-    LOGV3("Base time updated to %d%d", static_cast<uint32_t>(time >> 32),
-          static_cast<uint32_t>(time));
+    LOGV3("Base time updated to ");
+#ifdef DEBUG
+    print64(time);
+#endif
 }
 
 int8_t RTC::getTz() {
@@ -114,7 +116,7 @@ int8_t RTC::getTz() {
 
 void RTC::setTz(int8_t tz) {
     // TODO: finalize tz plan
-    _tz = tz;
+    this->_tz = tz;
 }
 
 bool RTC::setAlarm(uint64_t time) {
@@ -157,7 +159,7 @@ uint64_t RTC::convertCounter(uint32_t counter) {
 void print64(uint64_t v) {
     uint32_t hi = (uint32_t)(v >> 32);
     uint32_t lo = (uint32_t)(v & 0xFFFFFFFFu);
-
+    Serial.print('\t');
     if (hi) {
         Serial.print(hi);
         Serial.print(lo < 1000000000UL ? "0" : "");

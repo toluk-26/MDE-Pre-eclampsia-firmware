@@ -88,7 +88,7 @@ class FlashLog {
     bool setConfig();
 
     /// @brief deletes config section
-    void cleanConfig(); 
+    void cleanConfig();
     /// @brief deletes data section
     void cleanLogs();
     /// @brief deletes entire chip
@@ -107,14 +107,14 @@ class FlashLog {
     void dump(uint32_t start, uint32_t length);
 #endif
 
+    ConfigPack configload;
+
   protected:
     const uint32_t PAGE_SIZE = 0x000100;   // 256 bytes
     const uint32_t SECTOR_SIZE = 0x001000; // 4 KB
     const uint32_t BLOCK_SIZE = 0x010000;  // 64 KB
     const uint32_t CFG_OFFSET = 0x000000;  // config data block
     const uint32_t LOG_OFFSET = LOG_O;     // log block
-
-    ConfigPack configload;
 
     SPIClass _SPI_2;
     Adafruit_FlashTransport_SPI _QFlashTransport;

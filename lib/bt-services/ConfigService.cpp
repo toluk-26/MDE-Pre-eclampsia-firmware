@@ -4,7 +4,7 @@
  * @brief configuration service implementation. used to package and parse
  * configuration data.
  * @date March 29, 2026
- * 
+ *
  * @todo combine systolic+diastolic into threshold character
  * @todo combine sys coeff+dia coeff into coefficient character
  * @todo save config data on disconnect
@@ -12,7 +12,6 @@
  */
 
 #include "ConfigService.hpp"
-#include "flashlog.hpp"
 #include "log.hpp"
 
 // format of threshold payload
@@ -42,16 +41,8 @@ err_t ConfigService::begin() {
     _demoMode.write8(0x00);
 #endif
 
-    // new patient characteristic
-    _newPatient.setUuid(UUID_CHR_NEW_PATIENT);
-    _newPatient.setProperties(CHR_PROPS_WRITE | CHR_PROPS_NOTIFY);
-    _newPatient.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-    _newPatient.setFixedLen(sizeof(bool));
-    _newPatient.setUserDescriptor("New Patient Trigger");
-    _newPatient.setWriteCallback(ConfigService::newPatient_cb, true);
-    VERIFY_STATUS(_newPatient.begin());
-
     ConfigPack c = mem.getConfig();
+    config = c;
 
     // pid characteristic
     _pid.setUuid(UUID_CHR_PID);
@@ -65,70 +56,72 @@ err_t ConfigService::begin() {
     _pid.write32(c.pid);
 
     // diastolic characteristic
-    _diastolic.setUuid(UUID_CHR_DIASTOLIC);
-    _diastolic.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY |
-                             CHR_PROPS_WRITE);
-    _diastolic.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-    _diastolic.setFixedLen(sizeof(ThresholdData));
-    _diastolic.setUserDescriptor("Diastolic Thresholds");
-    _diastolic.setWriteCallback(ConfigService::diastolic_cb, true);
-    VERIFY_STATUS(_diastolic.begin());
+    _thresholds.setUuid(UUID_CHR_THRESHOLDS);
+    _thresholds.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY |
+                              CHR_PROPS_WRITE);
+    _thresholds.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+    _thresholds.setFixedLen(2 * sizeof(ThresholdData));
+    _thresholds.setUserDescriptor("Thresholds");
+    _thresholds.setWriteCallback(ConfigService::thresholds_cb, true);
+    VERIFY_STATUS(_thresholds.begin());
     // send threshold
-    ThresholdData minmaxpacket = {c.diastolic_min, c.diastolic_max};
-    _diastolic.write(&minmaxpacket, sizeof(ThresholdData));
-
-    // systolic characteristic
-    _systolic.setUuid(UUID_CHR_SYSTOLIC);
-    _systolic.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY |
-                            CHR_PROPS_WRITE);
-    _systolic.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-    _systolic.setFixedLen(sizeof(ThresholdData));
-    _systolic.setUserDescriptor("Systolic Thresholds");
-    _systolic.setWriteCallback(ConfigService::systolic_cb, true);
-    VERIFY_STATUS(_systolic.begin());
-    // send threshold
-    minmaxpacket = {c.systolic_min, c.systolic_max};
-    _systolic.write(&minmaxpacket, sizeof(ThresholdData));
+    ThresholdData thresholdPacket[2] = {{c.systolic_min, c.systolic_max},
+                                        {c.diastolic_min, c.diastolic_max}};
+    _thresholds.write(&thresholdPacket, sizeof(thresholdPacket));
 
     // diastolic coefficient characteristic
-    _diastolicCoefficients.setUuid(UUID_CHR_DIASTOLIC_C);
-    _diastolicCoefficients.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY |
-                                         CHR_PROPS_WRITE);
-    _diastolicCoefficients.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-    _diastolicCoefficients.setFixedLen(sizeof(CoefficientData));
-    _diastolicCoefficients.setUserDescriptor("Diastolic Coefficients");
-    _diastolicCoefficients.setWriteCallback(ConfigService::diastolic_cb, true);
-    VERIFY_STATUS(_diastolicCoefficients.begin());
+    _coefficients.setUuid(UUID_CHR_COEFFICIENTS);
+    _coefficients.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY |
+                                CHR_PROPS_WRITE);
+    _coefficients.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+    _coefficients.setFixedLen(2 * sizeof(CoefficientData));
+    _coefficients.setUserDescriptor("Diastolic Coefficients");
+    _coefficients.setWriteCallback(ConfigService::coefficients_cb, true);
+    VERIFY_STATUS(_coefficients.begin());
     // send coefficients
-    CoefficientData coefficientpacket = {c.diastolic_coeff_m,
-                                         c.diastolic_coeff_b};
-    _diastolicCoefficients.write(&coefficientpacket, sizeof(CoefficientData));
-
-    // systolic coefficient characteristic
-    _systolicCoefficients.setUuid(UUID_CHR_SYSTOLIC_C);
-    _systolicCoefficients.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY |
-                                        CHR_PROPS_WRITE);
-    _systolicCoefficients.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-    _systolicCoefficients.setFixedLen(sizeof(CoefficientData));
-    _systolicCoefficients.setUserDescriptor("Systolic Coefficients");
-    _systolicCoefficients.setWriteCallback(ConfigService::systolic_cb, true);
-    VERIFY_STATUS(_systolicCoefficients.begin());
-    // send coefficients
-    coefficientpacket = {c.diastolic_coeff_m, c.diastolic_coeff_b};
-    _systolicCoefficients.write(&coefficientpacket, sizeof(CoefficientData));
+    CoefficientData coefficientPacket[2] = {
+        {c.diastolic_coeff_m, c.diastolic_coeff_b},
+        {c.diastolic_coeff_m, c.diastolic_coeff_b}};
+    _coefficients.write(&coefficientPacket, sizeof(coefficientPacket));
 
     return ERROR_NONE;
 }
 
-void ConfigService::newPatient_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                                  uint8_t *data, uint16_t len) {
-    if (len != sizeof(bool)) {
-        LOGE("New Patient received size is wrong");
-        return;
-    }
-    LOGV("New Patient Flag!");
-    // TODO: perform task then notify that task are done
+
+void ConfigService::saveConfig() {
+    ConfigPack &c = config;
+    _pid.write32(c.pid);
+    ThresholdData thresholdPacket[2] = {{c.systolic_min, c.systolic_max},
+                                        {c.diastolic_min, c.diastolic_max}};
+    _thresholds.write(&thresholdPacket, 2 * sizeof(thresholdPacket));
+    CoefficientData coefficientPacket[2] = {
+        {c.diastolic_coeff_m, c.diastolic_coeff_b},
+        {c.diastolic_coeff_m, c.diastolic_coeff_b}};
+    _coefficients.write(&coefficientPacket, 2 * sizeof(coefficientPacket));
+
+    LOGV("Threshold Values");
+    LOGV("\tHigh:\t%u/%u", config.systolic_max, config.diastolic_max);
+    LOGV("\tLow:\t%u/%u", config.systolic_min, config.diastolic_min);
+
+    LOGV("Coefficient Values");
+    LOGV("\tSystolic:\tS = %f * x + %f", config.systolic_coeff_m,
+         config.systolic_coeff_b);
+    LOGV("\tDiastolic:\tD = %f * x + %f", config.diastolic_coeff_m,
+         config.diastolic_coeff_b);
+
+    mem.configload = c;
+    mem.setConfig();
 }
+
+// void ConfigService::newPatient_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+//                                   uint8_t *data, uint16_t len) {
+//     if (len != sizeof(bool)) {
+//         LOGE("New Patient received size is wrong");
+//         return;
+//     }
+//     LOGV("New Patient Flag!");
+//     // TODO: perform task then notify that task are done
+// }
 
 void ConfigService::pid_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                            uint8_t *data, uint16_t len) {
@@ -146,58 +139,46 @@ void ConfigService::pid_cb(uint16_t conn_hdl, BLECharacteristic *chr,
     uint32_t pid;
     memcpy(&pid, data, len);
     // TODO: save pid
+    ConfigService &svc = (ConfigService &)chr->parentService();
+    svc.pid = pid;
+    svc.flag_newpid = true;
 }
 
-void ConfigService::diastolic_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                                 uint8_t *data, uint16_t len) {
-    LOGV("Diastolic Received");
-    if (len != sizeof(ThresholdData)) {
+void ConfigService::thresholds_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+                                  uint8_t *data, uint16_t len) {
+    LOGV("Thresholds Received");
+    if (len != 2 * sizeof(ThresholdData)) {
         LOGE("\treceived size is wrong. size received: %u", len);
         return;
     }
 
-    ThresholdData td;
-    memcpy(&td, data, len);
-    // TODO: save data
+    ThresholdData tds[2];
+    memcpy(&tds, data, len);
+    ConfigService &svc = (ConfigService &)chr->parentService();
+    svc.config.systolic_max = tds[0].max;
+    svc.config.systolic_min = tds[0].min;
+    svc.config.diastolic_max = tds[1].max;
+    svc.config.diastolic_min = tds[1].min;
+
+    svc._thresholds.notify(&tds, sizeof(tds));
 }
 
-void ConfigService::systolic_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                                uint8_t *data, uint16_t len) {
-    LOGV("Systolic Received");
-    if (len != sizeof(ThresholdData)) {
+
+void ConfigService::coefficients_cb(uint16_t conn_hdl, BLECharacteristic *chr,
+                                    uint8_t *data, uint16_t len) {
+    LOGV("Coefficients Received");
+    if (len != 2 * sizeof(CoefficientData)) {
         LOGE("\treceived size is wrong. size received: %u", len);
         return;
     }
 
-    ThresholdData td;
-    memcpy(&td, data, len);
-    // TODO: save data
-}
+    CoefficientData cds[2];
+    memcpy(&cds, data, len);
+    ConfigService &svc = (ConfigService &)chr->parentService();
+    svc.config.systolic_coeff_m = cds[0].max;
+    svc.config.systolic_coeff_b = cds[0].min;
+    svc.config.diastolic_coeff_m = cds[1].max;
+    svc.config.diastolic_coeff_b = cds[1].min;
 
-void ConfigService::diastolic_coefficient_cb(uint16_t conn_hdl,
-                                             BLECharacteristic *chr,
-                                             uint8_t *data, uint16_t len) {
-    LOGV("Diastolic Coefficients Received");
-    if (len != sizeof(CoefficientData)) {
-        LOGE("\treceived size is wrong. size received: %u", len);
-        return;
-    }
-
-    CoefficientData cd;
-    memcpy(&cd, data, len);
-    // TODO: save data
-}
-
-void ConfigService::systolic_coefficient_cb(uint16_t conn_hdl,
-                                            BLECharacteristic *chr,
-                                            uint8_t *data, uint16_t len) {
-    LOGV("Systolic Coefficients Received");
-    if (len != sizeof(CoefficientData)) {
-        LOGE("\treceived size is wrong. size received: %u", len);
-        return;
-    }
-
-    CoefficientData cd;
-    memcpy(&cd, data, len);
-    // TODO: save data
+    svc._coefficients.notify(&cds, sizeof(cds));
 }

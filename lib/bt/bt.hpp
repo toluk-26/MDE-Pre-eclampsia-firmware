@@ -24,6 +24,9 @@ class BleManager {
     /// @brief needs to be public for the controller
     TransferService transferService;
     CalibrateService calibrateService;
+    ConfigService configService; // handles configuration settings
+
+    static bool disconnectFlag;
 
   private:
     /// @brief what to do on disconnect from phone
@@ -48,7 +51,7 @@ class BleManager {
 
     // PES services
     TimeService timeService;     // update time and tz
-    ConfigService configService; // handles configuration settings
+    
 };
 
 extern BleManager bt;

@@ -17,12 +17,12 @@ bool Log::log(LogLevel level, const char *file, const char *func, int line,
     return res;
 }
 
-bool Log::sensor(const uint8_t heartrate, const uint8_t diastolic,
-                 const uint8_t systolic, const uint8_t code) {
-    LOGV("Saving Sensor values %d, %d, %d, %d", heartrate, diastolic, systolic,
+bool Log::sensor(const uint8_t heartrate, const uint8_t systolic,
+                 const uint8_t diastolic, const uint8_t code) {
+    LOGV("Saving Sensor values %d, %d, %d, %d", heartrate, systolic, diastolic,
          code);
     return mem.append(FlashLog::PayloadType::SENSOR_t,
-                      {heartrate, diastolic, systolic, code});
+                      {heartrate, systolic, diastolic, code});
 }
 
 bool Log::vlog(LogLevel level, const char *file, const char *func, int line,
