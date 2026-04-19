@@ -93,8 +93,8 @@ class Log {
      * memory
      * @return whether the append was successful or nah
      */
-    static bool sensor(const uint8_t heartrate, const uint8_t diastolic,
-                       const uint8_t systolic, const uint8_t code);
+    static bool sensor(const uint8_t heartrate, const uint8_t systolic,
+                       const uint8_t diastolic, const uint8_t code);
 
   private:
     static bool vlog(LogLevel level, const char *file, const char *func,
