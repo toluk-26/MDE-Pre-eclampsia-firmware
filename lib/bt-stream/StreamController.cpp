@@ -13,9 +13,9 @@
 
 void StreamController::begin() {}
 
-void StreamController::run() {
+void StreamController::run(uint64_t value) {
     // get sensor value
-    uint64_t value = rtc.getTime(); // TODO: set to whatever.
+    // uint64_t value = rtc.getTime(); // TODO: set to whatever.
 
     // #ifdef DEBUG
     //     Serial.printf("STATUS: streaming value > %x\n", value);
