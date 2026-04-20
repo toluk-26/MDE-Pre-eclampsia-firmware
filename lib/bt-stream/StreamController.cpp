@@ -1,8 +1,8 @@
 /**
  * @file StreamController.cpp
  * @author Tolu Kolade
- * @brief StreamController implementation. public wrapper for CalibrateService. use this to
- * send live sensor data to the app.
+ * @brief StreamController implementation. public wrapper for CalibrateService.
+ * use this to send live sensor data to the app.
  * @date March 31, 2026
  *
  * @todo change value, or change it to paramater
@@ -31,4 +31,14 @@ void StreamController::run(uint64_t value) {
 
     // write it
     bt.calibrateService.sendData(data);
+}
+
+void StreamController::nextStep() { bt.calibrateService.sendTrigger(); }
+
+bool StreamController::isReset() {
+    if (bt.calibrateService.trigger_flag) {
+        bt.calibrateService.trigger_flag = false;
+        return true;
+    }
+    return false;
 }
