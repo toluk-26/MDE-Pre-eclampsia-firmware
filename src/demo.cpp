@@ -13,6 +13,8 @@
 #include <arduino.h>
 #include <vector>
 
+#include "StreamController.hpp"
+
 #define BUZZER_PIN 0
 
 enum DemoState { IDLE, ACTIGRAPH, PPG, BP_READ, BUZZER };
@@ -20,6 +22,7 @@ DemoState state = IDLE;
 
 actigraph ak(5, 1);
 TransferController tcrtl;
+StreamController scrtl;
 
 void setup() {
     Serial.begin(SERIAL_BAUD); // wait for serial monitor to connect
@@ -70,10 +73,9 @@ void loop() {
         Serial.println("Running Actigraph...");
         bool movementGood = ak.run();
 
-        std::vector<uint8_t> data;
-        data = {uint8_t(movementGood ? 1 : 0)};
-        bt.transferService.sendData(data);
+        if (bt.calibrateService.stream_flag) scrtl.run(uint64_t(movementGood));
 
+        /** @todo make sure this doesnt pass without sending*/
         if (movementGood) {
             state = PPG;
         }
@@ -87,10 +89,7 @@ void loop() {
         while (millis() < notedTime + 5000) { // stall for ... milliseconds
             ;
         }
-        if (bt.transferService.transfer_flag) {
-            bt.transferService.transfer_flag = false;
-            state = ACTIGRAPH;
-        }
+
         state = BP_READ;
         break;
     }
@@ -103,11 +102,7 @@ void loop() {
         while (!tcrtl.isDone()) { // run until all data sent over BT
             tcrtl.run();
         }
-        // for resetting demo sequence
-        if (bt.transferService.transfer_flag) {
-            bt.transferService.transfer_flag = false;
-            state = ACTIGRAPH;
-        }
+
         state = BUZZER;
         break;
     }
@@ -121,11 +116,6 @@ void loop() {
             delay(500);                       // for 0.5s
         }
 
-        // for resetting demo sequence
-        if (bt.transferService.transfer_flag) {
-            bt.transferService.transfer_flag = false;
-            state = ACTIGRAPH;
-        }
         state = ACTIGRAPH;
         break;
     }
