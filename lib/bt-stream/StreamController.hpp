@@ -18,5 +18,6 @@ class StreamController {
     void begin();
 
     /// @brief prepares the value and sends it to calibrate chr
-    void run();
+    void run(uint64_t value);
+    bool isDone();
 };
