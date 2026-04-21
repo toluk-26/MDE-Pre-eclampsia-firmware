@@ -41,10 +41,6 @@ TransferController tcrtl;
 StreamController scrtl;
 
 void setup() {
-    // Serial.begin(SERIAL_BAUD); // wait for serial monitor to connect
-    // while (!Serial && millis() < 2000) {
-    //     ; // do nothing
-    // }
 
     pinMode(BUZZER_PIN, OUTPUT);
 
@@ -91,7 +87,6 @@ void loop() {
 void handleIdle() {
     /** @todo wait in IDLE until an app button is pressed to start the
        sequence.*/
-
 };
 
 // Run the actigraph and send the result to the app. if the result is good, move
@@ -99,12 +94,10 @@ void handleIdle() {
 void handleRunActigraph() {
     bool movementGood = ak.run(); // run the actigraph
 
-    /** @todo tolu's app reset
-    // check flag
-    if (...) {
-    state = IDLE;
+    /** app reset */
+    if (scrtl.isReset()) {
+        state = IDLE;
     }
-    */
 
     // transmit ak result to app
     if (bt.calibrateService.stream_flag) {
@@ -114,6 +107,7 @@ void handleRunActigraph() {
     /** @todo make sure this doesnt pass without sending*/
     if (movementGood) {
         state = SIMULATED_PPG;
+        scrtl.nextStep();
     }
 };
 
@@ -123,15 +117,14 @@ void handleSimulatedPPG() {
     uint32_t timeStamp = millis();
     while (millis() < timeStamp + PPG_STALL_MS) {
 
-        /** @todo tolu's app reset
-        // check flag
-        if (...) {
-        state = IDLE;
+        /** app reset */
+        if (scrtl.isReset()) {
+            state = IDLE;
         }
-        */
     }
 
     state = BP_READ;
+    scrtl.nextStep();
 };
 
 // read flashlog BP data and send over BT
@@ -140,16 +133,15 @@ void handleBpRead() {
     tcrtl.begin();
     while (!tcrtl.isDone()) { // run until all data sent over BT
 
-        /** @todo tolu's app reset
-        // check flag
-        if (...) {
-        state = IDLE;
+        /** app reset */
+        if (scrtl.isReset()) {
+            state = IDLE;
         }
-        */
 
         tcrtl.run();
     }
     state = BUZZER_ALERT;
+    scrtl.nextStep();
 };
 
 // run the buzzer for 5 seconds, toggling at .5 second intervals
@@ -161,12 +153,10 @@ void handleBuzzerAlert() {
 
     while (count < 5) {
 
-        /** @todo tolu's app reset
-        // check flag
-        if (...) {
-        state = IDLE;
+        /** app reset */
+        if (scrtl.isReset()) {
+            state = IDLE;
         }
-        */
 
         if (millis() - lastBuzz >= interval) {
             tone(BUZZER_PIN, BUZZER_HZ, 500); // play for 500ms
@@ -176,6 +166,7 @@ void handleBuzzerAlert() {
     }
 
     state = IDLE;
+    scrtl.nextStep();
 };
 
 void initBpLog() {
