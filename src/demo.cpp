@@ -24,6 +24,8 @@
 #define BUZZER_PIN 0
 #define BUZZER_HZ 650
 #define PPG_STALL_MS 3000
+#define SYSTOLIC_THRESHOLD 145
+#define DIASTOLIC_THRESHOLD 95
 
 // function prototypes
 void handleIdle();
@@ -42,18 +44,27 @@ StreamController scrtl;
 
 void setup() {
 
+    // Serial.begin(SERIAL_BAUD); // startup serial monitor
+    // while (!Serial) {
+    //     ;
+    // }
+
     pinMode(BUZZER_PIN, OUTPUT);
-
-    bt.begin();  // bluetooth
     mem.begin(); // flash memory and data logging
-    initBpLog(); // initialize flash with random bp data for demo
+    delay(3000);
 
-    /**
-     * @todo do bt connection setup stuff here
-     */
+    // Load bp demo data here
+    // initBpLog(); // initialize flash with random bp data for demo
+
+    bt.begin(); // bluetooth
+    // mem.printMeta();
+    // mem.printConfig();
+    // mem.dumpData();
+    // mem.dump();
 }
 
 void loop() {
+    if (bt.disconnectFlag) state = IDLE;
 
     switch (state) {
     case IDLE: {
@@ -87,7 +98,10 @@ void loop() {
 void handleIdle() {
     /** @todo wait in IDLE until an app button is pressed to start the
        sequence.*/
+    if (scrtl.isReset()) state = RUN_ACTIGRAPH;
 };
+
+unsigned long startPPG;
 
 // Run the actigraph and send the result to the app. if the result is good, move
 // to the next state.
@@ -97,6 +111,8 @@ void handleRunActigraph() {
     /** app reset */
     if (scrtl.isReset()) {
         state = IDLE;
+        LOGV("Going to Idle");
+        return;
     }
 
     // transmit ak result to app
@@ -107,88 +123,117 @@ void handleRunActigraph() {
     /** @todo make sure this doesnt pass without sending*/
     if (movementGood) {
         state = SIMULATED_PPG;
+        startPPG = millis();
         scrtl.nextStep();
+        LOGV("Going to SIMULATED_PPG");
     }
 };
 
+bool firstRun;
 // stall for PPG_STALL_MS milliseconds, to simulate a PPG reading
 void handleSimulatedPPG() {
-
-    uint32_t timeStamp = millis();
-    while (millis() < timeStamp + PPG_STALL_MS) {
-
-        /** app reset */
-        if (scrtl.isReset()) {
-            state = IDLE;
-        }
+    if (scrtl.isReset()) {
+        state = IDLE;
+        LOGV("Going to Idle");
+        return;
     }
 
-    state = BP_READ;
-    scrtl.nextStep();
+    if (millis() - startPPG <= PPG_STALL_MS) {
+        /** app reset */
+        state = BP_READ;
+        scrtl.nextStep();
+        // prepare for bpread
+        firstRun = true;
+        LOGV("Going to BP_READ");
+    }
 };
+
+unsigned long lastBuzz;
+uint8_t count;
 
 // read flashlog BP data and send over BT
 void handleBpRead() {
-    // reset controller to start at the beginning of flash and send over BT
-    tcrtl.begin();
-    while (!tcrtl.isDone()) { // run until all data sent over BT
-
-        /** app reset */
-        if (scrtl.isReset()) {
-            state = IDLE;
-        }
-
-        tcrtl.run();
+    if (scrtl.isReset()) {
+        state = IDLE;
+        LOGV("Going to idle");
+        return;
     }
-    state = BUZZER_ALERT;
-    scrtl.nextStep();
+
+    // reset controller to start at the beginning of flash and send over BT
+
+    if (firstRun) {
+        tcrtl.begin();
+        firstRun = false;
+    }
+    if (!tcrtl.isDone()) { // run until all data sent over BT
+        SensorPayload v = tcrtl.run();
+        if (v.systolic > SYSTOLIC_THRESHOLD ||
+            v.diastolic > DIASTOLIC_THRESHOLD) {
+            scrtl.nextStep();
+            LOGV("Going to BUZZER_ALERT");
+            state = BUZZER_ALERT; // next state
+            count = 0;
+        }
+    }
 };
 
 // run the buzzer for 5 seconds, toggling at .5 second intervals
 void handleBuzzerAlert() {
+    if (scrtl.isReset()) {
+        state = IDLE;
+        LOGV("Going to Idle");
+        return;
+    }
 
     const long interval = 1000; // 1 second
-    uint8_t count = 0;
-    unsigned long lastBuzz = millis();
 
-    while (count < 5) {
-
-        /** app reset */
-        if (scrtl.isReset()) {
-            state = IDLE;
-        }
-
+    if (count < 5) {
         if (millis() - lastBuzz >= interval) {
             tone(BUZZER_PIN, BUZZER_HZ, 500); // play for 500ms
             lastBuzz = millis();              // reset timestamp
             count++;                          // increment count
+            LOGV("Buzz");
         }
     }
-
-    state = IDLE;
-    scrtl.nextStep();
 };
 
 void initBpLog() {
+    mem.cleanAll();
+
+    ConfigPack c = {
+        .pid = 7, // minutes is all i can spare
+        .diastolic_min = 0,
+        .diastolic_max = DIASTOLIC_THRESHOLD,
+        .diastolic_coeff_m = 1.0,
+        .diastolic_coeff_b = 0.0,
+        .systolic_min = 80, // sys min
+        .systolic_max = SYSTOLIC_THRESHOLD,
+        .systolic_coeff_m = 1.0,
+        .systolic_coeff_b = 0.0,
+    };
+
+    mem.configload = c;
+    mem.setConfig();
+
     uint8_t heartrate = 80;
     uint8_t code = 0; /** @todo what should this be for the demo?*/
     uint8_t diastolic, systolic;
 
     // build random set of data for storing in flash
     for (int i = 0; i < 50; i++) {
-        if (random(0, 1000) < 250)
-            diastolic = 70 + (1 * random(0, 3));
+        if (random(0, 1000) < 150)
+            diastolic = 70 + i / 2 + (random(0, 5));
         else {
-            diastolic = 70 - (1 * random(0, 3));
+            diastolic = 70 + i / 2 - (random(0, 3));
         }
 
-        if (random(0, 1000) < 250)
-            systolic = 110 + (1 * random(0, 5));
+        if (random(0, 1000) < 150)
+            systolic = 110 + i + (random(0, 10));
         else {
-            systolic = 110 - (1 * random(0, 5));
+            systolic = 110 + i - (random(0, 5));
         }
-        Log::sensor(heartrate, diastolic, systolic, code);
+        Log::sensor(heartrate, systolic, diastolic, code);
     }
     // always high concern values for the last entry in flash
-    Log::sensor(heartrate, diastolic = 100, systolic = 150, code);
+    Log::sensor(heartrate, systolic = 150, diastolic = 100, code);
 }

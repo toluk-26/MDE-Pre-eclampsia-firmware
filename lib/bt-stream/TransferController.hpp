@@ -13,13 +13,20 @@
 #include "bt.hpp"
 #include "flashlog.hpp"
 
+struct SensorPayload {
+    uint8_t heartrate;
+    uint8_t systolic;
+    uint8_t diastolic;
+    uint8_t code;
+};
+
 class TransferController {
   public:
     /// @brief prepare values in private section
     void begin();
 
     /// @brief each packet is sent on one loop. almost non-blocking
-    void run();
+    SensorPayload run();
 
     /// @brief check if transfer is done. also updates size character
     bool isDone();

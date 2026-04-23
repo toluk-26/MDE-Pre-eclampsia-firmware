@@ -10,6 +10,7 @@
 
 #include "StreamController.hpp"
 #include "rtc.hpp"
+#include <log.hpp>
 
 void StreamController::begin() {}
 
@@ -33,7 +34,10 @@ void StreamController::run(uint64_t value) {
     bt.calibrateService.sendData(data);
 }
 
-void StreamController::nextStep() { bt.calibrateService.sendTrigger(); }
+void StreamController::nextStep() {
+    LOGV("Going to Next Demo State");
+    bt.calibrateService.sendTrigger();
+}
 
 bool StreamController::isReset() {
     if (bt.calibrateService.trigger_flag) {
