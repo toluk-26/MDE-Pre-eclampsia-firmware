@@ -1,6 +1,5 @@
 #include "fsm.h"
-#include "flashlog.hpp"
-#include "log.hpp"
+#include "flashlog.hpp" 
 
 FSM::FSM(Sensors &sensors_, Indicators &indicators_, Power &power_, PESBt &bt_)
     : sensors(sensors_), indicators(indicators_), power(power_), bt(bt_) {}
