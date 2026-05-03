@@ -66,7 +66,8 @@ void FSM::handleLowBattery() {
 
 void FSM::handleCharging() {
     indicators.blinkYellow(500);
-    if (!power.isCharging() && power.getBatteryPercent() > 30) //low battery is below 30 percent
+    if (!power.isCharging() &&
+        power.getBatteryPercent() > 30) // low battery is below 30 percent
         currentState = STATE_INIT;
 }
 
@@ -75,20 +76,13 @@ void FSM::handleCheckConfig() {
     bool configValid = mem.getConfig(); // true if config loaded correctly
 
     if (!configValid) {
-#ifdef DEBUG
-        Serial.println(
-            "CONFIG ERROR: invalid or missing config. Resetting defaults...");
-#endif
+        LOGE("invalid or missing config. Resetting defaults...");
         mem.cleanConfig(); // erase config sector
         mem.setConfig();   // write default config using FlashLog's internal
                            // defaults
-#ifdef DEBUG
-        Serial.println("CONFIG: Default config written");
-#endif
+        LOGV3("Default config written");
     } else {
-#ifdef DEBUG
-        Serial.println("CONFIG: Valid config found");
-#endif
+        LOGV3("CONFIG: Valid config found");
     }
     currentState = STATE_CALIBRATE;
 }
@@ -107,7 +101,8 @@ void FSM::handleConditionCheck() {
     if (sensors.motionOK() && sensors.positionOK())
         currentState = STATE_MEASURE_BP;
     else {
-        power.scheduleRetry(60); //changed from 20 mins to 60 mins as per Sam's comment on REM sleep
+        power.scheduleRetry(60); // changed from 20 mins to 60 mins as per Sam's
+                                 // comment on REM sleep
         currentState = STATE_IDLE;
     }
 }

@@ -1,6 +1,7 @@
 /**
  * @file log.hpp
- * @brief wrappers to add data to the external flash memory
+ * @brief wrappers to add data to the external flash memory. log class and
+ * macros
  * @author Tolu Kolade
  * @date December 28, 2025
  */
@@ -29,7 +30,6 @@
  * ex: LOGE("Something odd happened!"), LOGE("Something odd happened! %d",
  * value)
  *
- *
  * @param fmt a string like "something odd happened"
  * @param __VA_ARGS__... arguments for values like example 2
  */
@@ -42,7 +42,6 @@
  * would println() or printf. the new line character is already added for you.
  * ex: LOGE("Something happened!"), LOGE("Something happened! %d",
  * value)
- *
  *
  * @param fmt a string like "something happened"
  * @param __VA_ARGS__... arguments for values like example 2
@@ -57,7 +56,6 @@
  * added for you. ex: LOGE("Something happened!"), LOGE("Something happened!
  * %d", value). this does not print file:function:line
  *
- *
  * @param fmt a string like "something happened"
  * @param __VA_ARGS__... arguments for values like example 2
  */
@@ -65,11 +63,11 @@
     Log::log(LogLevel::VERBOSE, nullptr, nullptr, 0, fmt, ##__VA_ARGS__)
 
 /**
- * @brief verbose log something to serial monitor and but NOT flash. input in
- * the same way you would println() or printf. the new line character is already
- * added for you. ex: LOGE("Something happened!"), LOGE("Something happened!
- * %d", value)
- *
+ * @brief level 3 verbose log something to serial monitor and but NOT flash.
+ * input in the same way you would println() or printf. the new line character
+ * is already added for you. ex: LOGE("Something happened!"), LOGE("Something
+ * happened! %d", value). this versions says the whole file, function and line
+ * in output
  *
  * @param fmt a string like "something happened"
  * @param __VA_ARGS__... arguments for values like example 2
@@ -86,6 +84,7 @@ enum LogLevel : uint8_t { ERROR, WARN, STATUS, VERBOSE };
 
 class Log {
   public:
+    /// @brief save a debug log
     static bool log(LogLevel level, const char *file, const char *func,
                     int line, const char *fmt, ...);
 
@@ -94,8 +93,8 @@ class Log {
      * memory
      * @return whether the append was successful or nah
      */
-    static bool sensor(const uint8_t heartrate, const uint8_t diastolic,
-                       const uint8_t systolic, const uint8_t code);
+    static bool sensor(const uint8_t heartrate, const uint8_t systolic,
+                       const uint8_t diastolic, const uint8_t code);
 
   private:
     static bool vlog(LogLevel level, const char *file, const char *func,

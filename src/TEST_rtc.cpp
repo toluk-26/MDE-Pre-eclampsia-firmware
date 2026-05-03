@@ -15,7 +15,6 @@ void setup() {
     Serial.printf("PreEclampsia Screener v%s\n", SOFTWARE_REVISION);
     Serial.println("        RTC Program");
     Serial.println("-----------------------------\n");
-    // print64(1767243600);
     // Serial.print('\n');
     rtc.setAlarm(rtc.getTime() + 60);
 }

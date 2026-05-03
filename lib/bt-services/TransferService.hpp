@@ -1,7 +1,7 @@
 /**
  * @file TransferService.hpp
  * @author Tolu Kolade
- * @brief
+ * @brief Transfer Service. used to stream packets in flash data block
  * @date March 29, 2026
  */
 
@@ -25,8 +25,10 @@ class TransferService : public BLEService {
     /// transfering data from flash to data service
     bool transfer_flag = false;
 
+    /// @brief send a packet of data. 
     void sendData(const std::vector<uint8_t> &data);
 
+    /// @date send the number of packets sent to confirm
     void sendSize(const uint32_t &size);
 
   protected:
@@ -36,4 +38,6 @@ class TransferService : public BLEService {
 
     static void trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                            uint8_t *data, uint16_t len);
+    static void start(uint16_t conn_hdl, BLECharacteristic *chr,
+                      uint16_t value);
 };

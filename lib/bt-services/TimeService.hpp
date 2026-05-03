@@ -1,5 +1,5 @@
 /**
- * @file bletis.hpp
+ * @file TimeService.hpp
  * @author Tolu Kolade
  * @brief Time Update Service. two characteristics for the time and timezone
  * @date December 23, 2025

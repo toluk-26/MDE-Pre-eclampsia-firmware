@@ -16,8 +16,10 @@
         "heartrate",
         "LOGV",
         "LOGW",
+        "NVIC",
         "Periph",
         "Preeclampsia",
+        "PRESCALAR",
         "qflash",
         "QSPI"
     ],
