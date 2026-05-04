@@ -38,7 +38,7 @@ void initBpLog();
 enum DemoState { IDLE, RUN_ACTIGRAPH, SIMULATED_PPG, BP_READ, BUZZER_ALERT };
 DemoState state = IDLE;
 
-actigraph ak(5, 1);
+Actigraph ak(5, 1);
 TransferController tcrtl;
 StreamController scrtl;
 

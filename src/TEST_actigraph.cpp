@@ -3,7 +3,7 @@
 #include "actigraph.hpp"
 #include <arduino.h>
 
-actigraph ak(3, 3);
+Actigraph ak(3, 3);
 
 void setup() {
     Serial.begin(SERIAL_BAUD); // startup serial monitor
