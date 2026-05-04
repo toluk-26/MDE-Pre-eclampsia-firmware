@@ -1,7 +1,8 @@
 #pragma once
-#include "bpstatus.h"
-#include "clock.hpp"
 #include "actigraph.hpp"
+#include "bpstatus.h"
+#include "rtc.hpp"
+#include <LSM6DS3.h>
 #include <MAX30105.h>
 
 class Sensors {

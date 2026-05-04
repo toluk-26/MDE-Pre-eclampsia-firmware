@@ -18,14 +18,12 @@ FlashLog::FlashLog()
       _QFlashTransport(PIN_QSPI_CS, _SPI_2), _qFlash(&_QFlashTransport) {}
 
 void FlashLog::begin() {
-    if (_flashOk) return; // check if flash is already init
-
     // init memory
     if (!_qFlash.begin(&p25q16h, 1)) {
         _flashOk = false;
-        LOGV("failed to initialize QSPI flash chip"); // no point in error since
-                                                      // flash isn't working
-                                                      // anyways
+        LOGV("failed to initialize QSPI flash chip"); // no point in error
+                                                      // since flash isn't
+                                                      // working anyways
 
         return; // TODO: change to return, go to low power, set error status
     }
@@ -57,7 +55,6 @@ bool FlashLog::append(PayloadType type, const std::vector<uint8_t> &payload) {
         LOGE("tried to append. log is too large");
         return false;
     }
-    // TODO: try not to write too quickly
     //     uint32_t waitStart = millis();
     //     while (_qFlash.isBusy() && (millis() - waitStart) < 100) {
     //         delay(1); // Yield to prevent watchdog resets
@@ -70,13 +67,12 @@ bool FlashLog::append(PayloadType type, const std::vector<uint8_t> &payload) {
     //     }
 
     // ok. can continue
-    // prepare header
+
     uint64_t time = rtc.getTime();
-    DataHdr h{type, payload.size(), time};
+    DataHdr h{type, (uint32_t)payload.size(), time};
     LOGV("writing header to address 0x%06x", _logTailAddr);
-#ifndef DEBUG_FLASH
-    _qFlash.writeBuffer(_logTailAddr, (uint8_t *)&h, sizeof(h)); // write header
-#endif
+    _qFlash.writeBuffer(_logTailAddr, (uint8_t *)&h,
+                        sizeof(h)); // write header
 
     // waitStart = millis();
     // while (_qFlash.isBusy() && (millis() - waitStart) < 100) {
@@ -104,10 +100,12 @@ bool FlashLog::read(uint32_t addr, DataHdr &header,
 
     // TODO: wait until qflash is ready
 
-    _qFlash.readBuffer(addr, (uint8_t *)&header, sizeof(header)); // read header
+    _qFlash.readBuffer(addr, (uint8_t *)&header,
+                       sizeof(header));           // read header
     uint32_t payloadAddr = addr + sizeof(header); // start addr of payload
     payload.resize(header.len);                   // prepare return payload size
-    _qFlash.readBuffer(payloadAddr, payload.data(), header.len); // get payload
+    _qFlash.readBuffer(payloadAddr, payload.data(),
+                       header.len); // get payload
 
     // this seems dumb
     // if (header.len != payload.size()) {
@@ -123,8 +121,8 @@ bool FlashLog::read(uint32_t addr, DataHdr &header,
 }
 
 ConfigPack FlashLog::getConfig() {
-    // this is here repeated because bt starts before config and tries to use
-    // the memory too fast.
+    // this is here repeated because bt starts before config and tries to
+    // use the memory too fast.
     if (!this->_flashOk) {
         LOGV3("Flash is not okay. trying to begin");
         this->begin();
@@ -157,7 +155,47 @@ uint8_t FlashLog::getTz() {
     return tz;
 }
 
+bool FlashLog::read(uint32_t addr, DataHdr &header,
+                    std::vector<uint8_t> &payload) {
+    if (addr >= _logTailAddr) return false;
+
+    // TODO: wait until qflash is ready
+
+    _qFlash.readBuffer(addr, (uint8_t *)&header, sizeof(header));
+    uint32_t payloadAddr = addr + sizeof(header);
+    payload.resize(header.len);
+    _qFlash.readBuffer(payloadAddr, payload.data(), header.len);
+
+    if (header.len != payload.size()) {
+        LOGE("header length does not match payload size");
+        return false;
+    }
+#ifdef DEBUG
+    LOGV("Reading Addr: %x", addr);
+    printEntry(header, payload);
+#endif
+    return true;
+}
+
+bool FlashLog::getConfig() {
+    if (!this->_flashOk) {
+#ifdef DEBUG
+        Serial.println("ERROR: tried to write config. flash is not okay");
+#endif
+        return false;
+    }
+    ConfigLoad c;
+    _qFlash.readBuffer(0, (uint8_t *)&c, sizeof(configload));
+
+    // check config load from flash
+    // TODO:
+}
+
 bool FlashLog::findTail() {
+    uint32_t addr = LOG_OFFSET;
+
+    LOGV("It took %d for flash to be ready", (end - start));
+
     uint32_t addr = LOG_OFFSET;
     uint32_t FlashSize = _flashSize * 1024;
 
@@ -279,6 +317,15 @@ void FlashLog::printEntry(const DataHdr &h,
                           const std::vector<uint8_t> &payload) {
     printHeader(h);
     printData(payload);
+}
+
+void FlashLog::printHeader(const DataHdr &h) {
+    LOGV("\tHeader > {\t%d, \t%d,\t%u%u }", h.type, h.len,
+         static_cast<uint32_t>(h.ts >> 32), static_cast<uint32_t>(h.ts));
+}
+
+void FlashLog::printData(const std::vector<uint8_t> &payload) {
+    LOGV("\tPayload > \"%.*s\"", payload.size(), payload.data());
 }
 
 void FlashLog::printHeader(const DataHdr &h) {

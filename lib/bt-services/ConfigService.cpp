@@ -87,7 +87,6 @@ err_t ConfigService::begin() {
     return ERROR_NONE;
 }
 
-
 void ConfigService::saveConfig() {
     ConfigPack &c = config;
     _pid.write32(c.pid);
@@ -162,7 +161,6 @@ void ConfigService::thresholds_cb(uint16_t conn_hdl, BLECharacteristic *chr,
 
     svc._thresholds.notify(&tds, sizeof(tds));
 }
-
 
 void ConfigService::coefficients_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                     uint8_t *data, uint16_t len) {

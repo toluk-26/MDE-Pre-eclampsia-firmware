@@ -42,7 +42,6 @@ class CalibrateService : public BLEService {
 
     void sendTrigger();
 
-
   protected:
     BLECharacteristic _trigger;
     BLECharacteristic _stream;

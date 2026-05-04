@@ -85,6 +85,7 @@ class FlashLog {
 
     ConfigPack getConfig();
     uint8_t getTz();
+    bool getData();
     bool setConfig();
 
     /// @brief deletes config section
@@ -101,6 +102,7 @@ class FlashLog {
     void printEntry(const DataHdr &h, const std::vector<uint8_t> &payload);
     void printHeader(const DataHdr &h);
     void printData(const std::vector<uint8_t> &payload);
+
     void dumpConfig();
     void dumpData();
     void dump() { dump(0, _flashSize); };

@@ -18,7 +18,7 @@ void Sensors::calibrate() {
 
 bool Sensors::motionOK() { return acti.run(); }
 bool Sensors::positionOK() { return acti.run(); }
-bool Sensors::rtcTriggered() { return ::clock.tick(); }
+bool Sensors::rtcTriggered() { return ::rtc.tick(); }
 
 BPStatus Sensors::measureBP() {
     int systolic = random(110, 170);

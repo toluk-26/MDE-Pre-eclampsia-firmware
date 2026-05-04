@@ -57,7 +57,7 @@ void loop() {
 
     if (bt.calibrateService.stream_flag) sctrl.run();
 
-    if(bt.disconnectFlag){
+    if (bt.disconnectFlag) {
         bt.configService.saveConfig();
         bt.disconnectFlag = false;
     }
