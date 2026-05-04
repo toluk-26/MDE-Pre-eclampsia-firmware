@@ -26,8 +26,10 @@ void setup() {
     Serial.println("        Flash Program");
     Serial.println("-----------------------------\n");
 
-    mem.cleanLogs();
-    // LOG_SENSOR(91, 90, 120, 0);
+    mem.begin();
+
+    // mem.cleanLogs();
+    LOG_SENSOR(91, 90, 120, 0);
     // LOG_SENSOR(92, 92, 123, 0);
     // LOG_SENSOR(93, 90, 120, 0);
     // LOG_SENSOR(94, 92, 123, 0);
@@ -46,14 +48,11 @@ void setup() {
 
     // delay(500);
 
-    mem.printInfo();
     mem.printConfig();
-    mem._findTail();
     mem.printMeta();
-    mem.printData();
 
     mem.dumpConfig();
-    mem.dumpData();
+    // mem.dumpData();
 }
 
 void loop() {}

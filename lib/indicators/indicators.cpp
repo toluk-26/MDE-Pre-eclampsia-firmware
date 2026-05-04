@@ -2,7 +2,7 @@
 
 #define LED_RED 2
 #define LED_YELLOW 3
-#define BUZZER_PIN 4
+#define BUZZER_PIN 0
 
 void Indicators::init() {
     pinMode(LED_RED, OUTPUT);
@@ -10,6 +10,7 @@ void Indicators::init() {
     pinMode(BUZZER_PIN, OUTPUT);
 }
 
+/** @todo this code is blocking. */
 void Indicators::blinkYellow(int durationMs) {
     unsigned long start = millis();
     while (millis() - start < durationMs) {
@@ -22,7 +23,10 @@ void Indicators::blinkYellow(int durationMs) {
 
 void Indicators::alertHighBP() { digitalWrite(LED_RED, HIGH); }
 
+/**
+ * @brief  turn on red LED and buzzer for a critical BP alert
+ */
 void Indicators::alertCriticalBP() {
     digitalWrite(LED_RED, HIGH);
-    digitalWrite(BUZZER_PIN, HIGH);
+    tone(BUZZER_PIN, 400); // 400Hz tone
 }
