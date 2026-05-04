@@ -77,3 +77,14 @@ void CalibrateService::startTransfer_cb(uint16_t conn_hdl,
         // indications enabled
     }
 }
+
+void CalibrateService::startTransfer_cb(uint16_t conn_hdl,
+                                        BLECharacteristic *chr,
+                                        uint16_t value) {
+    if (value & 0x0001) {
+        // notifications enabled
+    }
+    if (value & 0x0002) {
+        // indications enabled
+    }
+}

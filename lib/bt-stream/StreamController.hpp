@@ -19,10 +19,10 @@ class StreamController {
 
     /// @brief prepares the value and sends it to calibrate chr
     void run(uint64_t value);
-    
+
     /// @brief make the demo go to the next step
     void nextStep();
 
-    /// @brief a reset has been received! 
+    /// @brief a reset has been received!
     bool isReset();
 };
