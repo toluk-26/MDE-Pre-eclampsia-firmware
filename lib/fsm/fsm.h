@@ -1,5 +1,4 @@
 #pragma once
-#include "bpstatus.h" // include BPStatus enum
 #include "bt.hpp"
 #include "indicators.h"
 #include "power.h"
@@ -7,7 +6,15 @@
 
 class FSM {
   public:
-    FSM(Sensors &sensors, Indicators &indicators, Power &power, PESBt &bt);
+    /**
+     * @brief FSM class constructor.
+     */
+    FSM(Sensors &sensors, Indicators &indicators, Power &power, BleManager &bt);
+
+    /**
+     * @brief primary method to run the FSM, should be called in the main loop
+     * of the program.
+     */
     void run();
 
   private:
@@ -27,11 +34,10 @@ class FSM {
     };
 
     SystemState currentState = STATE_OFF;
-
+    BleManager &bt;
     Sensors &sensors;
     Indicators &indicators;
     Power &power;
-    PESBt &bt;
 
     void handleInit();
     void handleLowBattery();

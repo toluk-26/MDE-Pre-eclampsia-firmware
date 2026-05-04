@@ -1,5 +1,5 @@
 /**
- * @file clock.cpp
+ * @file rtc.cpp
  * @brief implementation of the time interface for the RTC on the nrf52. since
  * the rtc is a counter and not timer, we must be careful.
  * @author Tolu Kolade

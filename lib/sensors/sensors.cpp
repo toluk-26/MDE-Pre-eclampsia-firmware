@@ -1,30 +1,39 @@
 #include "sensors.h"
-#include "clock.hpp"
+#include "rtc.hpp"
 #include <Arduino.h>
 
 void Sensors::init() {
-    Wire.begin();
-    ppg.begin(Wire);
+    // ppg.init(); // run init/setup code for ppg sensor  */
 }
 
+/** @todo what is this for? */
 void Sensors::calibrate() {
-    delay(2000);
+    // delay(2000);
 
-    for (int i = 0; i < 100; i++) {
-        ppg.getIR();
-        delay(10);
-    }
+    // for (int i = 0; i < 100; i++) {
+    //     ppg.getIR(); /** @todo use actual PPG code */
+    //     delay(10);
+    // }
 }
 
-bool Sensors::motionOK() { return acti.run(); }
-bool Sensors::positionOK() { return acti.run(); }
-bool Sensors::rtcTriggered() { return ::clock.tick(); }
+/**
+ * @brief wrapper to run the actigraph and check if movement and position are
+ * acceptable for BP measurement
+ * @return true if actigraph detects acceptable movement and position, false
+ * otherwise
+ */
+bool Sensors::runActigraph() { return acti.run(); }
 
-BPStatus Sensors::measureBP() {
-    int systolic = random(110, 170);
-    int diastolic = random(70, 120);
+/**
+ * @brief
+ * @return
+ */
+bool Sensors::rtcTriggered() { return ::rtc.tick(); }
 
-    if (systolic >= 160 || diastolic >= 110) return BPStatus::CRITICAL;
-    if (systolic >= 140 || diastolic >= 90) return BPStatus::ELEVATED;
-    return BPStatus::OK;
+/** @todo implement PPG functions here from using MAX30101.
+ * also add reading from config to BP thresholds.
+ * */
+bloodPressure Sensors::measureBP() {
+    // get the systolic and diastolic bp using PPG
+    return ppg.run();
 }
