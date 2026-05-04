@@ -31,11 +31,17 @@ class CalibrateService : public BLEService {
     // stream sensor data flag
     bool stream_flag = false;
 
+    // recieved a trigger from the app. clear as soon as read
+    bool trigger_flag = false;
+
     /**
      * @brief send sensor data
      * @param data 1. reserve 2. reinterpret_cast<const uint8_t *> 3. insert
      */
     void sendData(const std::vector<uint8_t> &data);
+
+    void sendTrigger();
+
 
   protected:
     BLECharacteristic _trigger;

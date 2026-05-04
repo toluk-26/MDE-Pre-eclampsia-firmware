@@ -1,8 +1,8 @@
 /**
  * @file StreamController.cpp
  * @author Tolu Kolade
- * @brief StreamController implementation. public wrapper for CalibrateService. use this to
- * send live sensor data to the app.
+ * @brief StreamController implementation. public wrapper for CalibrateService.
+ * use this to send live sensor data to the app.
  * @date March 31, 2026
  *
  * @todo change value, or change it to paramater
@@ -10,12 +10,13 @@
 
 #include "StreamController.hpp"
 #include "rtc.hpp"
+#include <log.hpp>
 
 void StreamController::begin() {}
 
-void StreamController::run() {
+void StreamController::run(uint64_t value) {
     // get sensor value
-    uint64_t value = rtc.getTime(); // TODO: set to whatever.
+    // uint64_t value = rtc.getTime(); // TODO: set to whatever.
 
     // #ifdef DEBUG
     //     Serial.printf("STATUS: streaming value > %x\n", value);
@@ -31,4 +32,17 @@ void StreamController::run() {
 
     // write it
     bt.calibrateService.sendData(data);
+}
+
+void StreamController::nextStep() {
+    LOGV("Going to Next Demo State");
+    bt.calibrateService.sendTrigger();
+}
+
+bool StreamController::isReset() {
+    if (bt.calibrateService.trigger_flag) {
+        bt.calibrateService.trigger_flag = false;
+        return true;
+    }
+    return false;
 }

@@ -1,8 +1,8 @@
 /**
  * @file CalibrateService.hpp
  * @author Tolu Kolade
- * @brief calibrate service implementation. intended to be used by a controller to send live
- * data of a sensor
+ * @brief calibrate service implementation. intended to be used by a controller
+ * to send live data of a sensor
  * @date March 31, 2026
  * @todo remove trigger and use setCccdWriteCallback()
  */
@@ -15,7 +15,7 @@ err_t CalibrateService::begin() {
 
     // trigger characteristic
     _trigger.setUuid(UUID_CHR_TRIGGER_C);
-    _trigger.setProperties(CHR_PROPS_WRITE);
+    _trigger.setProperties(CHR_PROPS_WRITE | CHR_PROPS_NOTIFY);
     _trigger.setPermission(SECMODE_OPEN, SECMODE_OPEN);
     _trigger.setFixedLen(sizeof(bool));
     _trigger.setUserDescriptor("Trigger");
@@ -28,6 +28,7 @@ err_t CalibrateService::begin() {
     _stream.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
     _stream.setFixedLen(0); // TODO: try 0
     _stream.setUserDescriptor("Data");
+    _stream.setCccdWriteCallback(CalibrateService::startTransfer_cb, true);
     VERIFY_STATUS(_stream.begin());
 
     return ERROR_NONE;
@@ -46,28 +47,31 @@ void CalibrateService::sendData(const std::vector<uint8_t> &data) {
 #endif
 }
 
+void CalibrateService::sendTrigger() { _trigger.notify8(true); }
+
 void CalibrateService::trigger_cb(uint16_t conn_hdl, BLECharacteristic *chr,
                                   uint8_t *data, uint16_t len) {
-    if (len != sizeof(uint8_t)) {
-        LOGE("trigger received size is wrong");
-        return;
-    }
-    // get class
     CalibrateService &svc = (CalibrateService &)chr->parentService();
 
-    if (svc.stream_flag) {
-        svc.stream_flag = false; // disable flag
-        LOGV("Stream trigger flag disabled!");
-    } else {
-        svc.stream_flag = true; // set flag
+    if (!svc.trigger_flag) {
+        svc.trigger_flag = true; // set flag
         LOGV("Stream trigger flag enabled!");
+    } else {
+        LOGV("Stream trigger flag already enabled!");
     }
 }
 
-void CalibrateService::startTransfer_cb(uint16_t conn_hdl, BLECharacteristic *chr,
-                      uint16_t value) {
+void CalibrateService::startTransfer_cb(uint16_t conn_hdl,
+                                        BLECharacteristic *chr,
+                                        uint16_t value) {
+    CalibrateService &svc = (CalibrateService &)chr->parentService();
+    if (value & 0x0000) {
+        svc.stream_flag = true; // set flag
+        LOGV("Stream trigger flag enabled!");
+    }
     if (value & 0x0001) {
-        // notifications enabled
+        svc.stream_flag = true; // set flag
+        LOGV("Stream trigger flag enabled!");
     }
     if (value & 0x0002) {
         // indications enabled

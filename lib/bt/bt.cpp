@@ -76,6 +76,7 @@ void BleManager::onConnect(uint16_t conn_handle) {
     connection->getPeerName(central_name, sizeof(central_name));
 
     LOGV("Connected to %s", central_name);
+    disconnectFlag = false;
 }
 
 /**

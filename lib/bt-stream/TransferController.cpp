@@ -1,8 +1,8 @@
 /**
  * @file TransferController.cpp
  * @author Tolu Kolade
- * @brief TransferController implementation. public wrapper for TransferService. use this to
- * control sending data from the memory to the ble service
+ * @brief TransferController implementation. public wrapper for TransferService.
+ * use this to control sending data from the memory to the ble service
  * @date March 30, 2026
  */
 
@@ -16,8 +16,8 @@ void TransferController::begin() {
     LOGV3("Begin Reading");
 }
 
-void TransferController::run() {
-    if (_done) return;
+SensorPayload TransferController::run() {
+    if (_done) return SensorPayload();
 
     DataHdr header;
     std::vector<uint8_t> payload;
@@ -27,7 +27,7 @@ void TransferController::run() {
         _done = true;
         bt.transferService.transfer_flag = false;
         bt.transferService.sendSize(_numofEntries);
-        return;
+        return SensorPayload();
     }
 
     // reserve size
@@ -46,6 +46,10 @@ void TransferController::run() {
     // prepare for next loop
     _currAddr += dataSize;
     _numofEntries++;
+
+    SensorPayload vals;
+    memcpy(&vals, payload.data(), sizeof(SensorPayload));
+    return vals;
 }
 
 bool TransferController::isDone() { return _done; }
