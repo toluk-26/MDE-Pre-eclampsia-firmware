@@ -28,6 +28,5 @@ void Indicators::alertHighBP() { digitalWrite(LED_RED, HIGH); }
  */
 void Indicators::alertCriticalBP() {
     digitalWrite(LED_RED, HIGH);
-    tone(BUZZER_PIN, 1000); // Piezo buzzers usually are audible between 2khz to
-                            // 4khz so i guess 3khz is good?
+    tone(BUZZER_PIN, 400); // 400Hz tone
 }
