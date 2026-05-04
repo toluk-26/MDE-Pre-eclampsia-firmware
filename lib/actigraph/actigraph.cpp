@@ -1,10 +1,10 @@
-/*
-Filename: actigraph.cpp
-Author: Samuel Thompson
-Description: actigraph.hpp implimentation. READ HEADER FILE COMMENTS.
-Date: 2026/02/09
-Modified:
-*/
+/**
+ * @file actigraph.cpp
+ * @author Samuel Thompson
+ * @description: actigraph.hpp implementation. READ HEADER FILE COMMENTS.
+ * @date 2026/02/09
+ * @modified:
+ */
 
 #include "actigraph.hpp"
 
@@ -12,12 +12,12 @@ Modified:
 #include "log.hpp"
 #include <vector>
 
-actigraph::actigraph(int windowLength, int windowCount, float movementThreshold,
+Actigraph::Actigraph(int windowLength, int windowCount, float movementThreshold,
                      int maxHeadAngle)
     : xl(), windowLength(windowLength), windowCount(windowCount),
       maxHeadAngle(maxHeadAngle), movementThreshold(movementThreshold) {}
 
-bool actigraph::run() {
+bool Actigraph::run() {
     data.clear(); // clear accelerometer data
     xl.start();   // turn on accelerometer
 
@@ -50,7 +50,7 @@ bool actigraph::run() {
     return (angleOK && moveOK);
 }
 
-bool actigraph::goodAngle() {
+bool Actigraph::goodAngle() {
     std::vector<float> pitches; // forward / backward head tilt
     std::vector<float> yaws;    // left / right head rotation (looking)
 
@@ -87,7 +87,7 @@ bool actigraph::goodAngle() {
     return false;
 }
 
-bool actigraph::goodMovement() {
+bool Actigraph::goodMovement() {
     // perform check on each window
     for (unsigned int window = 0; window < data.size(); window++) {
         std::vector<float> windowMag = {};
@@ -113,7 +113,7 @@ bool actigraph::goodMovement() {
     return true; // if all are under threshold, movement is good
 }
 
-float actigraph::pitch(float x, float y, float z) {
+float Actigraph::pitch(float x, float y, float z) {
     float pitch = 0.0;
 #if defined(usb_c_to_chin)
     pitch = atan2(-x, z);
@@ -128,7 +128,7 @@ float actigraph::pitch(float x, float y, float z) {
     return pitch;
 }
 
-float actigraph::yaw(float x, float y, float z) {
+float Actigraph::yaw(float x, float y, float z) {
     float yaw = 0.0;
 #if defined(usb_c_to_chin)
     yaw = atan2(-y, z);
@@ -143,7 +143,7 @@ float actigraph::yaw(float x, float y, float z) {
     return yaw;
 }
 
-float actigraph::mean(const std::vector<float> &vals) {
+float Actigraph::mean(const std::vector<float> &vals) {
     float mean = 0.0;
     for (unsigned int i = 0; i < vals.size(); i++) { // total sum of values
         mean += vals[i];
@@ -154,7 +154,7 @@ float actigraph::mean(const std::vector<float> &vals) {
     return mean;
 }
 
-float actigraph::standardDeviation(const std::vector<float> &vals) {
+float Actigraph::standardDeviation(const std::vector<float> &vals) {
     if (vals.size() < 2) { // avoid divide by zero
         return 0.0;
     }

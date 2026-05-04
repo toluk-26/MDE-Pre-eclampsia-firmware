@@ -14,6 +14,7 @@ void Indicators::init() {
     pinMode(BUTTON_PIN, INPUT);
 }
 
+/** @todo this code is blocking. */
 void Indicators::blinkYellow(int durationMs) {
     unsigned long start = millis();
     digitalWrite(LED_BLUE, HIGH);
@@ -56,6 +57,9 @@ void Indicators::ledOff() {
     digitalWrite(LED_GREEN, HIGH);
 }
 
+/**
+ * @brief  turn on red LED and buzzer for a critical BP alert
+ */
 void Indicators::alertCriticalBP() {
     digitalWrite(LED_BLUE, HIGH);
     digitalWrite(LED_GREEN, HIGH);

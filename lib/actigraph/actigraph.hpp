@@ -1,34 +1,38 @@
-/*
-Filename: actigraph.hpp
-Author: Samuel Thompson
-Description:
-
-Uses accelerometer to measure subject movement
-based on a forehead implimentation, and determines if subject is in a
-satasfactory position and non-moving state.
-
-All axes defined relative to Seeed Studio Xiao nrf5n840 sense devkit label side
-facing subject's face.
-
-Accelerometer vectors described as follows:
-+X is pointing up when facing label, and USB-C port is down
-+Y is pointing up when facing label, and USB-C port is to the left.
-+Z is pointing up off of devkit label.
-
-Macros are used to describe devkit orientation in our device package.
-UNCOMMENT ONE MACRO for proper anglular math, based on name describing
-orientation.
-
-Adjust class private variables as necessary to fine-tune to application.
-
-Date: 2026/02/09 Modified:
-*/
+/**
+ * @file actigraph.hpp
+ * @author Samuel Thompson
+ * @description:
+ * Uses accelerometer to measure subject movement
+ * based on a forehead implimentation, and determines if subject is in a
+ * satasfactory position and non-moving state.
+ *
+ * All axes defined relative to Seeed Studio Xiao nrf5n840 sense devkit label
+ * side facing subject's face.
+ *
+ * Accelerometer vectors described as follows:
+ * +X is pointing up when facing label, and USB-C port is down
+ * +Y is pointing up when facing label, and USB-C port is to the left.
+ * +Z is pointing up off of devkit label.
+ *
+ * Macros are used to describe devkit orientation in our device package.
+ * UNCOMMENT ONE MACRO for proper anglular math, based on name describing
+ * orientation.
+ *
+ * Adjust class private variables as necessary to fine-tune to application.
+ *
+ * @date 2026/02/09
+ * @modified:
+ */
 
 #ifndef ACTIGRAPH_HPP
 #define ACTIGRAPH_HPP
 
 #include "accelerometer.hpp"
 #include <vector>
+
+/** @important: note these definitions were used with the orientation of the
+ * SEEED Studio Xiao nrf58240 Sense Devboard
+ * */
 
 #define usb_c_to_crown
 // #define usb_c_to_chin
@@ -39,9 +43,9 @@ Date: 2026/02/09 Modified:
 #error "Define exactly one USB-C orientation macro"
 #endif
 
-class actigraph {
+class Actigraph {
   public:
-    actigraph(int windowLength = 5, int windowCount = 5,
+    Actigraph(int windowLength = 5, int windowCount = 5,
               float movementThreshold = 0.05, int maxHeadAngle = 30);
 
     // run the accelerometer and collect window data
