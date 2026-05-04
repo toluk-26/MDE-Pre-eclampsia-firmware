@@ -5,8 +5,11 @@
  * @date YYYY/MM/DD
  * @modified:
  */
+
 #include "sensors.hpp"
 
-bool Sensors::motionOK() { return acti.run(); }
-bool Sensors::positionOK() { return acti.run(); }
-bool Sensors::rtcTriggered() { return ::rtc.tick(); }
+bool Sensors::runActigraph() { return ak.run(); }
+
+bool Sensors::rtcTriggered() { return rtc.tick(); }
+
+bloodPressure Sensors::measureBP() { return ppg.run(); }
