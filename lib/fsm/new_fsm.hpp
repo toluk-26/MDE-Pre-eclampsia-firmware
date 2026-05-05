@@ -7,14 +7,17 @@
 #include "log.hpp"
 #include "power.h"
 #include "sensors.hpp"
+#include <StreamController.hpp>
+#include <TransferController.hpp>
 
 class FSM {
   public:
     /**
      * @brief FSM class constructor.
      */
-    FSM(Sensors &sensors, Indicators &indicators, Power &power, BleManager &bt,
-        Log &log, FlashLog &flash);
+    // FSM(Sensors &sensors, Indicators &indicators, Power &power, BleManager
+    // &bt,
+    //     Log &log, FlashLog &flash);
 
     /**
      * @brief primary method to run the FSM, should be called in the main loop
@@ -65,12 +68,16 @@ class FSM {
     };
 
     SystemState currentState = STATE_INIT;
-    BleManager &bt;
-    Sensors &sensors;
-    Indicators &indicators;
-    Power &power;
-    Log &log;
-    FlashLog &flash;
+    BleManager bt;
+    Sensors sensors;
+    Indicators indicators;
+    Power power;
+    Log log;
+    FlashLog flash;
+    TransferController tcrtl;
+    StreamController sctrl;
+
+    bool runOnce = true;
 
     void handleInit();
     void handleIdle();

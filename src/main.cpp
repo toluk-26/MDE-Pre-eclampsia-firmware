@@ -6,14 +6,7 @@
 #include "sensors.hpp"
 #include <Arduino.h>
 
-Sensors sensors;
-Indicators indicators;
-Power power;
-BleManager bluetooth;
-Log logger;
-FlashLog flash;
-
-FSM program(sensors, indicators, power, bluetooth, logger, flash);
+FSM program;
 
 void setup() {
     /*Serial.begin(115200);

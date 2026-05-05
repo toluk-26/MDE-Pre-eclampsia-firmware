@@ -3,12 +3,15 @@
 // contains power detection, for idle to charging state transitions
 #include "battery.h"
 
-FSM::FSM(Sensors &sensors, Indicators &indicators, Power &power, BleManager &bt,
-         Log &log, FlashLog &flash)
-    : sensors(sensors), indicators(indicators), power(power), bt(bt), log(log),
-      flash(flash) {}
+// FSM::FSM(Sensors &sensors, Indicators &indicators, Power &power, BleManager
+// &bt,
+//          Log &log, FlashLog &flash)
+//     : sensors(sensors), indicators(indicators), power(power), bt(bt),
+//     log(log),
+//       flash(flash) {}
 
 void FSM::run() {
+    rtc.tick();
     switch (currentState) {
     case STATE_INIT:
         handleInit();
@@ -126,12 +129,30 @@ void FSM::handleAlertCritical() {
 
 void FSM::handleCharging() {
     // move to idle on battery power
-    if (power_get_state() == POWER_BATTERY) {
+    if (power_get_state() == POWER_BATTERY && !bt.isConnected()) {
         currentState = STATE_IDLE;
         bt.stop(); // turn off BT
+        runOnce = true;
     }
 
     // start bluetooth
-    bt.begin();
-    /** @todo transfer routing authority to app*/
+    if (runOnce) {
+        bt.begin();
+        runOnce = false;
+    }
+    if (bt.transferService.transfer_flag && tcrtl.isDone()) {
+        tcrtl.begin();
+    }
+
+    if (!tcrtl.isDone()) {
+        tcrtl.run();
+    }
+
+    // TODO: calibrate. send PI. change to float?
+    if (bt.calibrateService.stream_flag) sctrl.run(0);
+
+    if (bt.disconnectFlag) {
+        bt.configService.saveConfig();
+        bt.disconnectFlag = false;
+    }
 }

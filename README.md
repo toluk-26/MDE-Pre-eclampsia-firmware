@@ -1,4 +1,4 @@
-it takes a while for the environment to set up. you MUST use PlatformIO so that we can use the same libraries and tools easily.
+it takes a while for the environment to set up. you MUST use PlatformIO so that we can use the same libraries and tools easily. i should be moving this repo to another github account and deleting toluk-26. please look out my personal account [pideer](https://github.com/pideer)
 
 # Getting Started
 open the folder in VSCode with the [PlatformIO extension](vscode:extension/platformio.platformio-ide)
